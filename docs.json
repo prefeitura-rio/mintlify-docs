@@ -24,7 +24,9 @@
         "groups": [
           {
             "group": "Comece aqui",
-            "pages": ["introduction"]
+            "pages": [
+              "introduction"
+            ]
           }
         ]
       },
@@ -85,7 +87,9 @@
         "groups": [
           {
             "group": "Introdução",
-            "pages": ["api-reference/overview"]
+            "pages": [
+              "api-reference/overview"
+            ]
           },
           {
             "group": "Busca",
@@ -94,7 +98,7 @@
           },
           {
             "group": "Servico de Busca",
-            "icon": "magnifying-glass", 
+            "icon": "magnifying-glass",
             "openapi": "https://raw.githubusercontent.com/prefeitura-rio/app-busca-search/refs/heads/staging/docs/openapi-v3.json"
           },
           {
@@ -109,7 +113,7 @@
           },
           {
             "group": "Registro Municipal Integrado",
-            "icon": "database", 
+            "icon": "database",
             "openapi": "https://raw.githubusercontent.com/prefeitura-rio/app-rmi/refs/heads/staging/docs/openapi-v3.json"
           },
           {
@@ -143,6 +147,31 @@
             "pages": [
               "ferramentas/claude-code-usuario",
               "ferramentas/claude-code-admin"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "RMI (Registro Municipal Integrado)",
+        "groups": [
+          {
+            "group": "Visão Geral",
+            "pages": [
+              "rmi/overview"
+            ]
+          },
+          {
+            "group": "Dados Mestres",
+            "icon": "address-book",
+            "pages": [
+              "rmi/dados-mestres/pessoa-física"
+            ]
+          },
+          {
+            "group": "Eventos de Vida",
+            "icon": "heart-pulse",
+            "pages": [
+              "rmi/eventos-de-vida/pessoa-física---interacões-prefeitura"
             ]
           }
         ]

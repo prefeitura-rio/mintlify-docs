@@ -1,0 +1,55 @@
+name: Update dbt Documentation
+
+on:
+  repository_dispatch:
+    types: [dbt-schema-updated]
+  workflow_dispatch:
+    inputs:
+      project:
+        description: 'Specific project to update (leave empty for all)'
+        required: false
+        default: ''
+  schedule:
+    # Rebuild all weekly to ensure consistency
+    - cron: '0 6 * * 0'
+
+jobs:
+  update-docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "latest"
+          
+      - name: Set up Python
+        run: uv python install 3.11
+        
+      - name: Install dependencies
+        run: cd auto-dbt-docs && uv sync
+        
+      - name: Generate documentation for all projects
+        run: cd auto-dbt-docs && uv run python scripts/dbt_docs_generator.py --rebuild-all
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROJECT_FILTER: ${{ github.event.inputs.project }}
+          
+      - name: Update navigation
+        run: cd auto-dbt-docs && uv run python scripts/update_navigation.py
+        
+      - name: Commit changes
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "docs: rebuild dbt documentation $(date '+%Y-%m-%d %H:%M')"
+            git push
+          fi
