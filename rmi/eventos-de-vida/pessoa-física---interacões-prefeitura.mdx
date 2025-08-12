@@ -1,0 +1,77 @@
+---
+title: "Pessoa Física - Interações Prefeitura"
+description: "Interações Cidadão-Prefeitura Unificada
+
+Consolida interações dos sistemas 1746 e SMS com ontologia padronizada 
+e 19 campos essenciais.
+"
+icon: "database"
+---
+
+Interações Cidadão-Prefeitura Unificada
+
+Consolida interações dos sistemas 1746 e SMS com ontologia padronizada 
+e 19 campos essenciais.
+
+
+## Informações
+
+- **ID da tabela**: [rj-crm-registry.rmi_eventos.interacoes_pessoa_fisica_prefeitura](https://console.cloud.google.com/bigquery?p=rj-crm-registry&d=rmi_eventos&t=interacoes_pessoa_fisica_prefeitura&page=table)
+- **Projeto**: rj-crm-registry
+- **Dataset**: `rmi_eventos`
+- **Tabela**: `interacoes_pessoa_fisica_prefeitura`
+
+
+## Configuração
+
+- **Materialização**: table
+- **Alias**: interacoes_pessoa_fisica_prefeitura
+- **Particionamento**: `'field': 'data_particao', 'data_type': 'date'`
+- **Clustering**: sistema_origem, tipo_interacao, categoria_interacao
+- **Tags**: daily, core, facts
+
+
+## Colunas (18 total)
+
+
+| Coluna | Tipo | Descrição |
+|--------|------|-----------|
+| `id_interacao` | `unknown` | UUID único da interação gerado automaticamente |
+| `cpf_cidadao` | `unknown` | CPF do cidadão (11 dígitos, obrigatório) |
+| `sistema_origem` | `unknown` | Sistema fonte da interação |
+| `protocolo_origem` | `unknown` | ID/protocolo original no sistema fonte |
+| `tipo_interacao` | `unknown` | Tipo de interação segundo ontologia simplificada (SOLICITACAO, CONSUMO, COMUNICACAO, CADASTRO) |
+| `categoria_interacao` | `unknown` | Categoria da interação por domínio do serviço público |
+| `canal_interacao` | `unknown` | Canal específico utilizado na interação |
+| `modalidade_interacao` | `unknown` | Modalidade da interação (DIGITAL ou FISICO) |
+| `data_interacao` | `unknown` | Data da interação (usado para análises) |
+| `datahora_inicio` | `unknown` | Timestamp de início da interação |
+| `data_particao` | `unknown` | Data para particionamento BigQuery (deve igual data_interacao) |
+| `bairro_interacao` | `unknown` | Bairro da interação (quando disponível) |
+| `endereco_interacao` | `unknown` | Endereço estruturado da interação (quando disponível) |
+| `coordenadas` | `unknown` | Coordenadas geográficas da interação (quando disponível) |
+| `desfecho_interacao` | `unknown` | Resultado da interação (quando disponível) |
+| `dados_origem` | `unknown` | Dados originais preservados em JSON para flexibilidade |
+| `_datalake_loaded_at` | `unknown` | Timestamp de carregamento no datalake |
+| `_schema_version` | `unknown` | Versão do schema (1.1) |
+
+
+
+
+## Consultas Comuns
+
+```sql
+-- Consulta básica
+SELECT *
+FROM `rj-crm-registry.rmi_eventos.interacoes_pessoa_fisica_prefeitura`
+LIMIT 100;
+```
+
+
+```sql
+-- Filtrar por período
+SELECT *
+FROM `rj-crm-registry.rmi_eventos.interacoes_pessoa_fisica_prefeitura`
+WHERE data_particao >= '2024-01-01'
+LIMIT 100;
+```
