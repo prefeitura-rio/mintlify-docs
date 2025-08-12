@@ -31,6 +31,16 @@ e 19 campos essenciais.
 - **Tags**: daily, core, facts
 
 
+## Consultas Comuns
+
+```sql
+-- Consulta básica
+SELECT *
+FROM `rj-crm-registry.rmi_eventos.interacoes_pessoa_fisica_prefeitura`
+LIMIT 100;
+```
+
+
 ## Colunas (18 total)
 
 
@@ -58,20 +68,3 @@ e 19 campos essenciais.
 
 
 
-## Consultas Comuns
-
-```sql
--- Consulta básica
-SELECT *
-FROM `rj-crm-registry.rmi_eventos.interacoes_pessoa_fisica_prefeitura`
-LIMIT 100;
-```
-
-
-```sql
--- Filtrar por período
-SELECT *
-FROM `rj-crm-registry.rmi_eventos.interacoes_pessoa_fisica_prefeitura`
-WHERE data_particao >= '2024-01-01'
-LIMIT 100;
-```

@@ -22,12 +22,22 @@ Modelo contendo informações de pessoas físicas com dados cadastrais dentro da
 - **Tags**: daily
 
 
+## Consultas Comuns
+
+```sql
+-- Consulta básica
+SELECT *
+FROM `rj-crm-registry.rmi_dados_mestres.pessoa_fisica`
+LIMIT 100;
+```
+
+
 ## Colunas (95 total)
 
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
-| `cpf` | `string` | Cadastro de Pessoa Física (CPF) do indivíduo |
+| `cpf` | `string` | Cadastro de Pessoa Física (CPF) dos indivíduos!!! |
 | `nome` | `string` | Nome completo da pessoa física |
 | `nome_social` | `string` | Nome social do indivíduo, se houver |
 | `sexo` | `string` | Sexo do indivíduo ('masculino', 'feminino', 'não informado') |
@@ -126,20 +136,3 @@ Modelo contendo informações de pessoas físicas com dados cadastrais dentro da
 
 
 
-## Consultas Comuns
-
-```sql
--- Consulta básica
-SELECT *
-FROM `rj-crm-registry.rmi_dados_mestres.pessoa_fisica`
-LIMIT 100;
-```
-
-
-```sql
--- Filtrar por período
-SELECT *
-FROM `rj-crm-registry.rmi_dados_mestres.pessoa_fisica`
-WHERE data_particao >= '2024-01-01'
-LIMIT 100;
-```
