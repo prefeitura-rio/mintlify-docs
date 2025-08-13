@@ -173,6 +173,13 @@
             "pages": [
               "rmi/eventos-de-vida/pessoa-física---interacões-prefeitura"
             ]
+          },
+          {
+            "group": "Conversas",
+            "icon": "chat",
+            "pages": [
+              "rmi/conversas/chatbot"
+            ]
           }
         ]
       }
