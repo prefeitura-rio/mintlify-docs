@@ -2,7 +2,7 @@
 
 Este repositório contém a documentação técnica completa da infraestrutura de integração da IplanRio. A documentação abrange todos os aspectos da integração de sistemas, desde o Data Lake até as APIs e serviços de autenticação.
 
-## Estrutura da Documentação
+## Estrutura da Documentação 
 
 A documentação está organizada nas seguintes seções principais:
 
