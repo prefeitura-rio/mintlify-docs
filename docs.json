@@ -164,7 +164,8 @@
             "group": "Dados Mestres",
             "icon": "address-book",
             "pages": [
-              "rmi/dados-mestres/pessoa-física"
+              "rmi/dados-mestres/pessoa-física",
+              "rmi/dados-mestres/telefone"
             ]
           },
           {
