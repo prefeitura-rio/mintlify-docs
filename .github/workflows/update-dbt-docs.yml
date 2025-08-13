@@ -12,6 +12,8 @@ on:
   schedule:
     # Rebuild all weekly to ensure consistency
     - cron: '0 6 * * 0'
+  push:
+    branches: [ master, main ]
 
 jobs:
   update-docs:
