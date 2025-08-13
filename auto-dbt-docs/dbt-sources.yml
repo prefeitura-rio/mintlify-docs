@@ -12,6 +12,8 @@ projects:
         models:
           - name: "Pessoa Física"
             path: "models/core/rmi_dados_mestres/pessoa_fisica"
+          - name: "Telefone"
+            path: "core/rmi_dados_mestres/telefones"
           # - name: "Pessoa Jurídica"
           #   path: "models/core/rmi_dados_mestres/pessoa_juridica"
           # - name: "Endereços"
