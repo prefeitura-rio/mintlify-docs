@@ -21,3 +21,10 @@ projects:
         models:
           - name: "Pessoa Física - Interações Prefeitura"
             path: "models/core/rmi_eventos/interacoes_pessoa_fisica_prefeitura"
+      - name: "Conversas"
+        icon: "chat"
+        models:
+          - name: "Chatbot"
+            path: "models/core/rmi_conversas/chatbot"
+
+            
