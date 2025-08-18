@@ -31,32 +31,72 @@ LIMIT 100;
 ```
 
 
-## Colunas (21 total)
+## Colunas (61 total)
 
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
-| `id_interacao` | `unknown` | Chave primária única da interação, gerada como um hash MD5. |
-| `id_sessao` | `unknown` | ID da sessão de conversa (reply ID do Wetalkie). Pode ser nulo se a interação foi um disparo que não gerou conversa. |
-| `id_externo` | `unknown` | ID externo associado ao contato, vindo da URA. |
-| `protocolo` | `unknown` | Número de protocolo associado ao atendimento receptivo. |
-| `inicio_datahora` | `unknown` | Data e hora de início da interação. Para disparos, é a criação do envio; para receptivo, é o início da URA. Fuso horário America/Sao_Paulo. |
-| `fim_datahora` | `unknown` | Data e hora do último evento registrado na interação. Fuso horário America/Sao_Paulo. |
-| `contato` | `unknown` | Estrutura com informações consolidadas do contato. |
-| `hsm` | `unknown` | Estrutura com informações do disparo de HSM (mensagem ativa). |
-| `erro_fluxo` | `unknown` | Estrutura com informações sobre erros identificados no fluxo da conversa. |
-| `mensagens` | `unknown` | Array com o histórico de mensagens da conversa (quando aplicável). |
-| `busca` | `unknown` | Estrutura com informações sobre a funcionalidade de busca dentro do chatbot. |
-| `ura` | `unknown` | Estrutura com informações da URA (atendimento receptivo). |
-| `estatisticas` | `unknown` | Estrutura com métricas e estatísticas calculadas da sessão. |
-| `operador` | `unknown` | Nome do operador que atendeu (se aplicável). |
-| `tabulacao` | `unknown` | Estrutura com informações de tabulação do atendimento. |
-| `foi_entregue` | `unknown` | Indicador (true/false) se a mensagem HSM foi entregue. |
-| `foi_lida` | `unknown` | Indicador (true/false) se a mensagem HSM foi lida. |
-| `foi_respondida` | `unknown` | Indicador (true/false) se a mensagem HSM foi respondida. |
-| `gerou_conversa` | `unknown` | Indicador (true/false) se a interação gerou uma sessão de conversa na URA. |
-| `data_particao` | `unknown` | Data da partição da tabela, baseada na data de início da interação. |
-| `data_processamento` | `unknown` | Data e hora em que o registro foi processado pelo dbt. Fuso horário America/Sao_Paulo. |
+| `id_interacao` | `string` | Chave primária única da interação, gerada como um hash MD5. |
+| `id_sessao` | `string` | ID da sessão de conversa (reply ID do Wetalkie). Pode ser nulo se a interação foi um disparo que não gerou conversa. |
+| `id_externo` | `string` | ID externo associado ao contato, vindo da URA. |
+| `protocolo` | `string` | Número de protocolo associado ao atendimento receptivo. |
+| `inicio_datahora` | `timestamp` | Data e hora de início da interação. Para disparos, é a criação do envio; para receptivo, é o início da URA. Fuso horário America/Sao_Paulo. |
+| `fim_datahora` | `timestamp` | Data e hora do último evento registrado na interação. Fuso horário America/Sao_Paulo. |
+| `contato` | `record` | Estrutura com informações consolidadas do contato. |
+| `contato.id_contato` | `string` | ID do contato na plataforma Wetalkie. |
+| `contato.contato_telefone` | `string` | Número de telefone do contato. |
+| `contato.contato_nome` | `string` | Nome do contato. |
+| `contato.cpf` | `string` | CPF do contato (quando disponível). |
+| `contato.data_optin` | `date` | Data de opt-in do contato (quando disponível). |
+| `contato.data_optout` | `date` | Data de opt-out do contato (quando disponível). |
+| `hsm` | `record` | Estrutura com informações do disparo de HSM (mensagem ativa). |
+| `hsm.indicador` | `boolean` | Indicador (true/false) se a interação foi iniciada por um HSM. |
+| `hsm.indicador_falha` | `boolean` | Indicador (true/false) se o envio do HSM falhou. |
+| `hsm.id_hsm` | `string` | ID do template de mensagem (HSM) enviado. |
+| `hsm.id_disparo` | `string` | ID único do disparo. |
+| `hsm.status_disparo` | `string` | Descrição textual do status do disparo (ex: delivered, read, failed). |
+| `hsm.nome_campanha` | `string` | Nome da campanha associada ao disparo. |
+| `hsm.categoria_hsm` | `string` | Categoria do template de mensagem (HSM). |
+| `hsm.orgao_responsavel` | `string` | Órgão responsável pela campanha. |
+| `hsm.ambiente` | `string` | Ambiente de onde o disparo foi feito. |
+| `hsm.criacao_envio_datahora` | `timestamp` | Data e hora de criação do envio. Fuso horário America/Sao_Paulo. |
+| `hsm.envio_datahora` | `timestamp` | Data e hora do envio. Fuso horário America/Sao_Paulo. |
+| `hsm.entrega_datahora` | `timestamp` | Data e hora da entrega. Fuso horário America/Sao_Paulo. |
+| `hsm.leitura_datahora` | `timestamp` | Data e hora da leitura. Fuso horário America/Sao_Paulo. |
+| `hsm.resposta_datahora` | `timestamp` | Data e hora da resposta. Fuso horário America/Sao_Paulo. |
+| `hsm.falha_datahora` | `timestamp` | Data e hora da falha. Fuso horário America/Sao_Paulo. |
+| `hsm.descricao_falha` | `string` | Descrição da falha do HSM, caso tenha ocorrido. |
+| `hsm.inicio_datahora_ativo` | `timestamp` | Alias para criacao_envio_datahora. Fuso horário America/Sao_Paulo. |
+| `hsm.fim_datahora_ativo` | `timestamp` | Data e hora do último evento do HSM. Fuso horário America/Sao_Paulo. |
+| `erro_fluxo` | `record` | Estrutura com informações sobre erros identificados no fluxo da conversa. |
+| `erro_fluxo.indicador` | `boolean` | Indicador (true/false) se algum erro foi detectado na sessão. |
+| `erro_fluxo.tipo_erro` | `string[]` | Array com os tipos de erros detectados (ex: fluxo_travado, loop_ura). |
+| `mensagens` | `record[]` | Array com o histórico de mensagens da conversa (quando aplicável). |
+| `busca` | `record` | Estrutura com informações sobre a funcionalidade de busca dentro do chatbot. |
+| `busca.indicador` | `boolean` | Indicador (true/false) se a sessão utilizou a funcionalidade de busca. |
+| `busca.feedback` | `record` | Estrutura com o feedback do usuário sobre a busca. |
+| `ura` | `record` | Estrutura com informações da URA (atendimento receptivo). |
+| `ura.indicador` | `boolean` | Indicador (true/false) se a interação passou pela URA. |
+| `ura.id` | `string` | ID da URA. |
+| `ura.nome` | `string` | Nome da URA. |
+| `ura.inicio_datahora_receptivo` | `timestamp` | Data e hora de início da URA. Fuso horário America/Sao_Paulo. |
+| `ura.fim_datahora_receptivo` | `timestamp` | Data e hora de fim da URA. Fuso horário America/Sao_Paulo. |
+| `estatisticas` | `record` | Estrutura com métricas e estatísticas calculadas da sessão. |
+| `estatisticas.total_mensagens` | `integer` | Número total de mensagens na conversa. |
+| `estatisticas.total_mensagens_contato` | `integer` | Número de mensagens enviadas pelo contato. |
+| `estatisticas.total_mensagens_busca` | `integer` | Número de mensagens relacionadas à funcionalidade de busca. |
+| `estatisticas.duracao_sessao_seg` | `integer` | Duração total da sessão em segundos. |
+| `estatisticas.duracao_interacao_seg` | `integer` | Duração da interação do cliente em segundos. |
+| `estatisticas.duracao_ura_seg` | `integer` | Duração da URA em segundos. |
+| `estatisticas.tempo_medio_resposta_cliente_seg` | `integer` | Tempo médio de resposta do cliente em segundos. |
+| `operador` | `string` | Nome do operador que atendeu (se aplicável). |
+| `tabulacao` | `record` | Estrutura com informações de tabulação do atendimento. |
+| `foi_entregue` | `boolean` | Indicador (true/false) se a mensagem HSM foi entregue. |
+| `foi_lida` | `boolean` | Indicador (true/false) se a mensagem HSM foi lida. |
+| `foi_respondida` | `boolean` | Indicador (true/false) se a mensagem HSM foi respondida. |
+| `gerou_conversa` | `boolean` | Indicador (true/false) se a interação gerou uma sessão de conversa na URA. |
+| `data_particao` | `date` | Data da partição da tabela, baseada na data de início da interação. |
+| `data_processamento` | `timestamp` | Data e hora em que o registro foi processado pelo dbt. Fuso horário America/Sao_Paulo. |
 
 
 

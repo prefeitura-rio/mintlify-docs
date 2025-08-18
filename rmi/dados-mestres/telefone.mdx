@@ -32,7 +32,7 @@ LIMIT 100;
 ```
 
 
-## Colunas (15 total)
+## Colunas (21 total)
 
 
 | Coluna | Tipo | Descrição |
@@ -45,6 +45,12 @@ LIMIT 100;
 | `telefone_nacionalidade` | `string` | País de origem do número telefônico |
 | `telefone_qualidade` | `string` | Avaliação técnica da validade do número |
 | `telefone_aparicoes` | `record[]` | Lista de aparições do telefone em diferentes sistemas |
+| `telefone_aparicoes.sistema` | `string` | Sistema onde o telefone aparece |
+| `telefone_aparicoes.origem` | `string` | Órgão responsável pelo sistema |
+| `telefone_aparicoes.cpf_proprietario` | `string` | CPF do proprietário do telefone no sistema |
+| `telefone_aparicoes.nome_proprietario` | `string` | Nome do proprietário do telefone no sistema |
+| `telefone_aparicoes.data_primeira_aparicao` | `timestamp` | Data da primeira aparição do telefone no sistema |
+| `telefone_aparicoes.data_ultima_aparicao` | `timestamp` | Data da última aparição do telefone no sistema |
 | `telefone_aparicoes_quantidade` | `integer` | Número total de aparições do telefone em todos os sistemas |
 | `telefone_proprietarios_quantidade` | `integer` | Número de proprietários únicos associados ao telefone |
 | `telefone_sistemas_quantidade` | `integer` | Número de sistemas diferentes onde o telefone aparece |
