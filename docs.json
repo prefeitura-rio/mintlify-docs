@@ -130,6 +130,11 @@
             "group": "EAI Gateway",
             "icon": "briefcase",
             "openapi": "https://raw.githubusercontent.com/prefeitura-rio/app-eai-agent-gateway/refs/heads/staging/docs/swagger.json"
+          },
+          {
+            "group": "Encurtador de URLs",
+            "icon": "link",
+            "openapi": "https://raw.githubusercontent.com/prefeitura-rio/url_shortener/refs/heads/staging/docs/openapi-v3.json"
           }
         ]
       },
