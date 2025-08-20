@@ -95,12 +95,7 @@
           {
             "group": "Busca",
             "icon": "magnifying-glass",
-            "openapi": "https://services.staging.app.dados.rio/busca/openapi.json"
-          },
-          {
-            "group": "Servico de Busca",
-            "icon": "magnifying-glass",
-            "openapi": "https://raw.githubusercontent.com/prefeitura-rio/app-busca-search/refs/heads/staging/docs/openapi-v3.json"
+            "openapi": "https://raw.githubusercontent.com/prefeitura-rio/app-busca-search/refs/heads/main/docs/openapi-v3.json"
           },
           {
             "group": "Subpav OSA SMS",
@@ -115,27 +110,17 @@
           {
             "group": "Registro Municipal Integrado",
             "icon": "database",
-            "openapi": "https://raw.githubusercontent.com/prefeitura-rio/app-rmi/refs/heads/staging/docs/openapi-v3.json"
+            "openapi": "https://raw.githubusercontent.com/prefeitura-rio/app-rmi/refs/heads/main/docs/openapi-v3.json"
           },
           {
             "group": "GO",
             "icon": "briefcase",
-            "openapi": "https://raw.githubusercontent.com/prefeitura-rio/app-go-api/refs/heads/staging/docs/openapi-v3.json"
-          },
-          {
-            "group": "Surkai",
-            "icon": "briefcase",
-            "openapi": "https://raw.githubusercontent.com/prefeitura-rio/app-eai-agent-surkai/refs/heads/staging/docs/swagger/swagger.json"
-          },
-          {
-            "group": "EAI Gateway",
-            "icon": "briefcase",
-            "openapi": "https://raw.githubusercontent.com/prefeitura-rio/app-eai-agent-gateway/refs/heads/staging/docs/swagger.json"
+            "openapi": "https://raw.githubusercontent.com/prefeitura-rio/app-go-api/refs/heads/main/docs/openapi-v3.json"
           },
           {
             "group": "Encurtador de URLs",
             "icon": "link",
-            "openapi": "https://raw.githubusercontent.com/prefeitura-rio/url_shortener/refs/heads/staging/docs/openapi-v3.json"
+            "openapi": "https://raw.githubusercontent.com/prefeitura-rio/url_shortener/refs/heads/main/docs/openapi-v3.json"
           }
         ]
       },
