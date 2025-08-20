@@ -1,0 +1,272 @@
+---
+title: "Colaboração com Repositório de Queries"
+description: "Guia completo para colaborar com o repositório de queries da Prefeitura do Rio de Janeiro usando dbt e BigQuery"
+---
+
+# Colaboração com Repositório de Queries
+
+Este guia explica como colaborar com o repositório [queries-rj-iplanrio](https://github.com/prefeitura-rio/queries-rj-iplanrio) da Prefeitura do Rio de Janeiro, seguindo as melhores práticas de dbt e garantindo que seus modelos sejam materializados corretamente.
+
+## ✅ Pré-requisitos
+
+- [Ambiente dbt configurado](../instalacao-dbt)
+- Acesso ao projeto BigQuery `rj-iplanrio-dev`
+- Permissões de colaborador no repositório GitHub
+- Conhecimento básico de Git e GitHub
+
+## 🔧 Configuração Inicial
+
+### 1. Clonar o Repositório
+
+```bash
+git clone https://github.com/prefeitura-rio/queries-rj-iplanrio.git
+cd queries-rj-iplanrio
+```
+
+### 2. Configurar Ambiente de Desenvolvimento
+
+Se tiver um ambiente virtual, ative-o:
+
+```bash
+# Ativar ambiente virtual
+source dbt-env/bin/activate  # Linux/macOS
+# ou
+dbt-env\Scripts\activate     # Windows
+```
+
+Teste a conexão com o BigQuery:
+
+```bash
+# Verificar configuração
+dbt debug
+```
+
+<Warning>
+  **IMPORTANTE**: Seus modelos serão materializados no projeto BigQuery `rj-iplanrio-dev`. 
+  Nunca use o ambiente de produção para desenvolvimento.
+</Warning>
+
+## 🚀 Boas Práticas de Desenvolvimento
+
+### 1. Estrutura de Branch
+
+```bash
+# Criar branch para sua feature
+git checkout -b feat/nome-da-feature
+
+# Exemplo para modelo de saúde
+git checkout -b feat/modelo-dados-saude-sms
+```
+
+### 2. Nomenclatura de Modelos
+
+Siga o padrão estabelecido:
+
+```sql
+-- ✅ Correto: Nome descritivo e em snake_case
+{{ config(materialized='table') }}
+SELECT * FROM {{ ref('stg_sms_pacientes') }}
+
+-- ❌ Evite: Nomes genéricos
+{{ config(materialized='table') }}
+SELECT * FROM {{ ref('stg_data') }}
+```
+
+### 3. Uso Correto de `source` e `ref`
+
+```sql
+-- ✅ Use source para dados externos
+SELECT * FROM {{ source('sms', 'pacientes') }}
+
+-- ✅ Use ref para modelos dbt internos
+SELECT * FROM {{ ref('stg_sms_pacientes') }}
+
+-- ❌ Evite: Referências diretas a tabelas
+SELECT * FROM `rj-iplanrio-dev.sms.pacientes`
+```
+
+## 🧪 Desenvolvimento e Testes
+
+### 1. Executar Modelos Específicos
+
+Use `--select` para testar apenas seus modelos:
+
+```bash
+# Testar modelo específico
+dbt run --select nome_do_modelo
+
+# Testar modelo e suas dependências
+dbt build --select +nome_do_modelo
+
+# Testar o modelo e todos os modelos dependem dele
+dbt run --select nome_do_modelo+
+
+# Testar todos os modelos de uma pasta
+dbt run --select models/sms/*
+
+# Testar todos os modelos com tag daily
+dbt build --select tag:daily
+```
+
+<Note>
+É recomendável que você faça seus testes com o comando `dbt build`, pois além de rodar os modelos, ele também executa seus testes.
+</Note>
+
+
+
+## 📝 Workflow de Desenvolvimento
+
+### 1. Desenvolvimento Local
+
+1. **Crie os arquivos de metadados do seu projeto**
+   - Para cada novo projeto, crie dois arquivos em `models/raw/secretaria/seu_projeto/`:
+     - `_raw_seu_projeto__sources.yml`
+     - `_raw_seu_projeto__schema.yml`
+   - Esses arquivos são importantes para registrar as fontes de dados e a documentação dos modelos.
+
+   **Exemplo de `_raw_seu_projeto__sources.yml`:**
+   ```yaml
+   version: 2
+
+   sources:
+     - name: seu_projeto                # Nome da fonte de dados (ex: sms, saude, educacao)
+       database: projeto_de_origem      # Projeto/dataset de origem no BigQuery
+       schema: nome_do_schema           # Schema (conjunto de tabelas) de origem
+       freshness:
+         error_after: {count: 24, period: hour}  # Considera erro se os dados tiverem mais de 24h
+       loaded_at_field: _airbyte_extracted_at    # Campo que indica quando o dado foi extraído
+       tables:
+         - name: nome_da_tabela         # Nome da tabela de origem
+   ```
+
+   **Exemplo de `_raw_seu_projeto__schema.yml`:**
+   ```yaml
+   version: 2
+
+   models:
+     - name: seu_modelo # Nome do modelo
+       description: "Descrição do modelo" # Descrição do modelo
+       columns:
+         - name: id # Nome da coluna
+           description: "Identificador único" # Descrição da coluna
+         - name: nome # Nome da coluna
+           description: "Nome do paciente" # Descrição da coluna
+   ```
+
+2. **Configure sua pasta no `dbt_project.yml`**
+   
+   Após criar os arquivos de metadados, você precisa adicionar a configuração da sua pasta no arquivo `dbt_project.yml` do projeto. Isso permite que o DBT reconheça e processe seus modelos corretamente.
+
+   **Exemplo de configuração no `dbt_project.yml`:**
+   ```yaml
+   queries:
+     mart:
+       gerenciamento:
+         custos:
+           +tags: ["daily", "custos"]
+       sme:
+         frequencia:
+           +materialized: table
+           +schema: frequencia
+           +tags: ["daily", "sme"]
+           +project: rj-sme
+   ```
+
+   **Explicação das configurações:**
+   - `+tags`: Define tags para organização e filtros (ex: daily, custos, sme).
+     - As tags `daily` e `weekly` são especialmente importantes: elas determinam a frequência com que o Prefect irá executar seu modelo automaticamente. Se você marcar um modelo com a tag `daily`, o Prefect irá agendá-lo para rodar todos os dias; se marcar com `weekly`, ele será executado semanalmente.
+   - `+materialized`: Define como o modelo será materializado (table, view, incremental).
+   - `+schema`: Define o dataset específico onde o modelo será criado.
+   - `+project`: Define o projeto específico do BigQuery em que o modelo será criado.
+
+3. **Escreva ou edite seu modelo**
+   - Crie um novo arquivo `.sql` em `models/` ou edite um modelo existente.
+   - Exemplo: `models/raw/secretaria/seu_projeto/seu_modelo.sql`
+   - Lembre-se de usar `ref()` para dependências internas e `source()` para dados externos.
+
+4. **Ative o ambiente virtual**
+   ```bash
+   source dbt-env/bin/activate
+   ```
+
+5. **Execute o modelo para testar**
+   ```bash
+   dbt build --select seu_modelo --target dev
+   ```
+
+6. **Verifique o resultado no BigQuery**
+   - Acesse o console do [BigQuery](https://console.cloud.google.com/bigquery).
+   - Navegue até o projeto `rj-iplanrio-dev` e verifique se o dataset correspondente foi criado.
+   - Confirme se a tabela ou view do seu modelo foi criada e os dados estão corretos.
+
+### 2. Commit e Push
+
+```bash
+# 1. Adicionar arquivos
+git add models/seu_modelo.sql
+git add models/schema.yml
+
+# 2. Commit com mensagem descritiva
+git commit -m "feat: adiciona modelo de dados de saúde SMS
+
+- Cria modelo stg_sms_pacientes
+- Adiciona testes de qualidade
+- Documenta fonte de dados"
+
+# 3. Push para branch
+git push origin feature/nome-da-feature
+```
+
+### 3. Pull Request
+
+1. **Criar PR** no GitHub
+2. **Descrição**: Explicar mudanças e impacto
+3. **Review**: Solicitar revisão da equipe IplanRio
+4. **Testes**: Garantir que todos os testes passem
+5. **Merge**: Após aprovação, merge para `main`
+
+#### Workflow de CI/CD Automático
+
+Quando você cria um Pull Request, o sistema de CI/CD é executado automaticamente para validar e testar seus modelos:
+
+**🔍 CI (Continuous Integration) - Executado em cada PR:**
+
+- **Validação**: Executa `dbt debug` para verificar configurações
+- **Dependências**: Instala dependências com `dbt deps`
+- **Build Incremental**: Executa apenas os modelos modificados usando `dbt build -s 'state:modified+'`
+- **Ambiente Isolado**: Cria um dataset único no BigQuery `rj-iplanrio-dev` para cada execução do workflow
+- **Testes Automáticos**: Executa todos os testes definidos nos seus modelos
+
+<Note>
+  O workflow de CI cria um ambiente isolado para cada PR, garantindo que seus testes não interfiram com outros desenvolvedores e que os modelos sejam validados em um ambiente limpo.
+</Note>
+
+**✅ CD (Continuous Deployment) - Executado após merge:**
+
+- **Deploy Completo**: Executa todos os modelos com `dbt build`
+- **Ambiente de Produção**: Utiliza o target `pr_prod` (Produção)
+- **Manifest Atualizado**: Atualiza o `manifest.json` no Google Cloud Storage para futuras execuções incrementais
+
+<Warning>
+  **IMPORTANTE**: O workflow de CI testa seus modelos em um dataset temporário no `rj-iplanrio-dev`. 
+  Apenas após o merge na branch master é que os modelos são executados em produção.
+</Warning>
+
+**📊 Monitoramento do CI/CD:**
+
+- Acompanhe o progresso dos testes na aba "Actions" do seu PR
+- Verifique os logs para identificar possíveis erros
+- Aguarde a aprovação automática antes de solicitar review da equipe
+- Se houver falhas, corrija os problemas e faça novo commit - o CI será executado novamente
+
+
+## 📚 Recursos Adicionais
+
+- [Instalação do DBT](https://iplan-rio.mintlify.app/data-lake/dbt/instalacao-dbt)
+- [Estrutura de Pastas](https://iplan-rio.mintlify.app/data-lake/dbt/estrutura-pastas)
+- [Padrões YAML](https://iplan-rio.mintlify.app/data-lake/dbt/padroes-yaml)
+- [Padrões Testes](https://iplan-rio.mintlify.app/data-lake/dbt/testes)
+- [Repositório GitHub](https://github.com/prefeitura-rio/queries-rj-iplanrio)
+
+---
+

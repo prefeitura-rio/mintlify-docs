@@ -65,7 +65,7 @@
                 "group": "Prefect",
                 "icon": "robot",
                 "pages": [
-                  "guia-de-desenvolvimento/prefect/migracao-de-pipeline"
+                  "data-lake/prefect/migracao-de-pipeline"
                 ]
               },
               {
@@ -73,6 +73,7 @@
                 "icon": "people-carry-box",
                 "pages": [
                   "data-lake/dbt/instalacao-dbt",
+                  "data-lake/dbt/colaboracao-queries",
                   "data-lake/dbt/estrutura-pastas",
                   "data-lake/dbt/padroes-yaml",
                   "data-lake/dbt/testes"

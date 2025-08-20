@@ -11,8 +11,8 @@ Este guia explica como instalar o DBT (Data Build Tool), além de configurar o a
 - Permissões de administrador
 
 ---
-<AccordionGroup>
-<Accordion title="1. Instalar o Python">
+
+## 1. Instalar o Python
 
 <Note>
   O Python é uma linguagem de programação muito utilizada em projetos de ciência
@@ -58,9 +58,9 @@ Verifique:
 python --version
 pip --version
 ```
-</Accordion>
 
-<Accordion title="2. Instalar o Visual Studio Code">
+## 2. Instalar o Visual Studio Code
+
 <Note>
   O [Visual Studio Code (VS Code)](https://code.visualstudio.com/) é um editor
   de código leve e poderoso, muito utilizado em projetos com Python, DBT e Git.
@@ -87,9 +87,7 @@ Após instalar o VS Code, você pode adicionar algumas extensões úteis:
 
 Essas ferramentas deixarão seu ambiente de trabalho mais produtivo e organizado.
 
-</Accordion>
-
-<Accordion title="3. Instalar o Git">
+## 3. Instalar o Git
 
 <Note>
   O Git é um sistema de controle de versão distribuído. Ele é essencial para
@@ -127,9 +125,8 @@ Verifique:
 ```bash
 git --version
 ```
-</Accordion>
 
-<Accordion title="4. Criar e ativar um ambiente virtual Python">
+## 4. Criar e ativar um ambiente virtual Python
 
 <Note>
   Ambientes virtuais Python são usados para isolar as dependências de um
@@ -147,7 +144,6 @@ Criar o ambiente:
 python -m venv dbt-env
 ```
 
-
 Ativar o ambiente:
 
 <Warning>
@@ -159,14 +155,12 @@ Ativar o ambiente:
 source dbt-env/bin/activate
 ```
 
-
 ### Windows
 
 Criar o ambiente:
 ```cmd
 python -m venv dbt-env
 ```
-
 
 Ativar o ambiente:
 
@@ -175,20 +169,16 @@ Ativar o ambiente:
   virtual com o comando abaixo.
 </Warning>
 
-
 ```cmd
 dbt-env\Scripts\activate
 ```
-
 
 Desativar o ambiente (qualquer sistema):
 ```bash
 deactivate
 ```
 
-</Accordion>
-
-<Accordion title="5. Instalação do DBT">
+## 5. Instalação do DBT
 
 <Note>
   O DBT (Data Build Tool) é uma ferramenta que permite transformar dados
@@ -205,6 +195,7 @@ Vamos instalar então o DBT com o adaptador do BigQuery:
 ```bash
 python -m pip install dbt-core dbt-bigquery
 ```
+
 Verifique a instalação:
 
 ```bash
@@ -222,59 +213,117 @@ Plugins:
   - bigquery: 1.9.1
 ```
 
-</Accordion>
-
-<Accordion title="6. Configurando variáveis de ambiente">
+## 6. Configurando variáveis de ambiente e credenciais
 
 <Note>
-  Algumas variáveis de ambiente podem ser configuradas para personalizar o comportamento do DBT.
-  Duas importantes são:
-  - <code>DBT_PROFILES_DIR</code>: define o diretório onde está o arquivo <code>profiles.yml</code>.
-  - <code>DBT_USER</code>: valor opcional que pode ser utilizado em perfis personalizados ou scripts.
+  Para conectar o DBT ao BigQuery, precisamos configurar credenciais de autenticação
+  através de uma service account. Além disso, algumas variáveis de ambiente podem
+  ser configuradas para personalizar o comportamento do DBT.
 </Note>
 
-Vamos configurar essas variáveis nos sistemas Linux/macOS e Windows.
+### 6.1 Solicitar Service Account
 
-### Linux/macOS
+Antes de prosseguir, você precisa solicitar uma service account para o time responsável da Iplanrio. Esta service account deve ter as permissões necessárias para:
 
-Você pode definir as variáveis de ambiente adicionando as linhas abaixo ao final do arquivo `~/.bashrc`, `~/.zshrc` ou outro arquivo de configuração do seu shell:
+- Ler dados das tabelas do BigQuery
+- Criar e modificar tabelas no projeto do BigQuery
+- Executar jobs de processamento
+
+### 6.2 Criar pasta de credenciais
+
+Crie uma pasta chamada `credentials` **fora do seu projeto** para armazenar as credenciais de forma segura:
 
 ```bash
-export DBT_PROFILES_DIR=/caminho/para/seu/diretorio
-export DBT_USER=seu_nome
+# Linux/macOS
+mkdir ~/credentials
+
+# Windows
+mkdir C:\Users\%USERNAME%\credentials
 ```
 
-Depois de adicionar, execute:
+<Warning>
+  Nunca inclua a pasta credentials no controle de versão (Git).
+</Warning>
+
+### 6.3 Adicionar arquivo da Service Account
+
+1. Baixe o arquivo JSON da service account fornecida pelo time da Iplanrio
+2. Mova o arquivo para a pasta `credentials` criada anteriormente
+3. Renomeie o arquivo para algo descritivo, por exemplo: `iplanrio-dbt-service-account.json`
+
+### 6.4 Criar arquivo profiles.yml
+
+Crie um arquivo chamado `profiles.yml` na pasta `credentials` com a seguinte estrutura:
+
+```yaml
+iplan:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      project: rj-iplanrio-dev
+      schema: dbt_models
+      location: US
+      keyfile: /caminho/completo/para/credentials/iplanrio-dbt-service-account.json
+      threads: 8
+    
+    prod:
+      type: bigquery
+      method: service-account
+      project: rj-iplanrio
+      schema: dbt_models
+      location: US
+      keyfile: /caminho/completo/para/credentials/iplanrio-dbt-service-account.json
+      threads: 8
+```
+
+<Note>
+  Substitua os valores pelos dados reais do seu projeto:
+  - `rj-iplanrio-dev` e `rj-iplanrio`: IDs dos projetos no Google Cloud
+  - `dbt_models`: schema padrão para os modelos do DBT
+  - `keyfile`: caminho completo para o arquivo JSON da service account
+</Note>
+
+### 6.5 Configurar variáveis de ambiente
+
+Configure a variável `DBT_PROFILES_DIR` para apontar para a pasta onde está o `profiles.yml`:
+
+#### Linux/macOS
+
+Adicione ao final do arquivo `~/.bashrc`, `~/.zshrc` ou outro arquivo de configuração do seu shell:
+
+```bash
+export DBT_PROFILES_DIR=~/credentials
+```
+
+Depois execute:
 
 ```bash
 source ~/.bashrc  # ou ~/.zshrc, dependendo do seu shell
 ```
 
-### Windows
+#### Windows
 
-No Windows, você pode configurar variáveis de ambiente temporariamente no terminal:
+No Windows, configure a variável de ambiente:
 
 ```cmd
-setx DBT_PROFILES_DIR=C:\caminho\para\seu\diretorio
-setx DBT_USER=seu_nome
+setx DBT_PROFILES_DIR C:\Users\%USERNAME%\credentials
 ```
 
-Ou:
+Ou através da interface gráfica:
 
-1. Abra o menu Iniciar e busque por "Variáveis de ambiente".
-2. Clique em "Editar variáveis de ambiente do sistema".
+1. Abra o menu Iniciar e busque por "Variáveis de ambiente"
+2. Clique em "Editar variáveis de ambiente do sistema"
 3. Na seção "Variáveis de usuário", clique em "Novo" e adicione:
    - Nome da variável: `DBT_PROFILES_DIR`
-   - Valor da variável: `C:\caminho\para\seu\diretorio`
-4. Repita o processo para `DBT_USER`.
+   - Valor da variável: `C:\Users\%USERNAME%\credentials`
 
 <Warning>
   Sempre que você for trabalhar com DBT, verifique se as variáveis de ambiente estão corretamente definidas, especialmente <code>DBT_PROFILES_DIR</code>.
 </Warning>
 
-</Accordion>
-
-<Accordion title="7. Configurar o GitHub (opcional, mas recomendado)">
+## 7. Configurar o GitHub (opcional, mas recomendado)
 
 1. Crie uma conta em [github.com](https://github.com/)
 2. Configure o Git localmente:
@@ -283,8 +332,6 @@ Ou:
 git config --global user.name "Seu Nome"
 git config --global user.email "seu@email.com"
 ```
-</Accordion>
-</AccordionGroup>
 
 ---
 
