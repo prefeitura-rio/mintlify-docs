@@ -121,6 +121,11 @@
             "group": "Encurtador de URLs",
             "icon": "link",
             "openapi": "https://raw.githubusercontent.com/prefeitura-rio/url_shortener/refs/heads/main/docs/openapi-v3.json"
+          },
+          {
+            "group": "Surkai",
+            "icon": "magnifying-glass",
+            "openapi": "https://raw.githubusercontent.com/prefeitura-rio/app-eai-agent-surkai/refs/heads/staging/docs/swagger/swagger.json"
           }
         ]
       },

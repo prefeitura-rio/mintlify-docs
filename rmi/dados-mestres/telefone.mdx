@@ -18,7 +18,7 @@ Dimensão principal de telefones RMI - Registro Mestre de Informações consolid
 
 - **Materialização**: table
 - **Alias**: telefone
-- **Particionamento**: `"field": "rmi_data_criacao", "data_type": "datetime"`
+- **Particionamento**: `"field": "data_particao", "data_type": "date"`
 - **Clustering**: telefone_qualidade, telefone_tipo, confianca_propriedade
 
 
@@ -32,7 +32,7 @@ LIMIT 100;
 ```
 
 
-## Colunas (21 total)
+## Colunas (20 total)
 
 
 | Coluna | Tipo | Descrição |
@@ -54,7 +54,6 @@ LIMIT 100;
 | `telefone_aparicoes_quantidade` | `integer` | Número total de aparições do telefone em todos os sistemas |
 | `telefone_proprietarios_quantidade` | `integer` | Número de proprietários únicos associados ao telefone |
 | `telefone_sistemas_quantidade` | `integer` | Número de sistemas diferentes onde o telefone aparece |
-| `rmi_data_criacao` | `timestamp` | Data de criação do registro no RMI |
 | `rmi_data_atualizacao` | `timestamp` | Data da última atualização do registro no RMI |
 | `rmi_versao` | `string` | Versão do schema utilizada |
 | `rmi_hash_validacao` | `string` | Hash para controle de integridade dos dados |
