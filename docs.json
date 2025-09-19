@@ -126,6 +126,11 @@
             "group": "Surkai",
             "icon": "magnifying-glass",
             "openapi": "https://raw.githubusercontent.com/prefeitura-rio/app-eai-agent-surkai/refs/heads/staging/docs/swagger/swagger.json"
+          },
+          {
+            "group": "Heimdall API",
+            "icon": "shield-check",
+            "openapi": "https://raw.githubusercontent.com/prefeitura-rio/heimdall/main/docs/api/openapi.json"
           }
         ]
       },
