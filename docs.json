@@ -153,6 +153,18 @@
         ]
       },
       {
+        "tab": "Disparos WhatsApp",
+        "groups": [
+          {
+            "group": "Disparos de Whatsapp",
+            "icon": "paper-plane",
+            "pages": [
+              "disparos-whatsapp/padronizacao-query"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "RMI (Registro Municipal Integrado)",
         "groups": [
           {
@@ -181,18 +193,6 @@
             "icon": "chat",
             "pages": [
               "rmi/conversas/chatbot"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Disparos WhatsApp",
-        "groups": [
-          {
-            "group": "Disparos de Whatsapp",
-            "icon": "paper-plane",
-            "pages": [
-              "disparos-whatsapp/padronizacao-query"
             ]
           }
         ]
