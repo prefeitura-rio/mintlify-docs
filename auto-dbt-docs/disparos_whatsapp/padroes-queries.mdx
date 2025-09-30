@@ -1,0 +1,399 @@
+---
+title: Padrões para Criação de Queries de Disparo WhatsApp
+description: Este documento estabelece os padrões e melhores práticas para a criação de queries de disparo de mensagens via WhatsApp Business API.
+---
+
+# Padrões para Criação de Queries de Disparo WhatsApp
+
+## 1. Introdução
+
+Este documento estabelece os padrões e melhores práticas para a criação de queries de disparo de mensagens via WhatsApp Business API. O objetivo é garantir a consistência, a qualidade dos dados, a conformidade com as políticas de comunicação do WhatsApp e a eficiência dos envios, minimizando falhas e otimizando a experiência do usuário.
+
+### 1.1 Sequência sugerida pré-disparo para o time da IPLAN
+
+Esta sequência detalha os passos essenciais para o time da IPLAN antes de qualquer disparo, focando em permissões, configurações de sistema e validações cruciais.
+
+*   **Verificar se o agent "crm-registry-k8s" tem permissão de leitura nas tabelas de origem da query:**
+    *   **Explicação:** O `crm-registry-k8s` é o serviço responsável por acessar os dados que serão utilizados na query. Sem as permissões adequadas, a pipeline de disparo não conseguirá ler as tabelas necessárias, resultando em falha. Esta permissão deve ser concedida a nível de projeto ou tabela específica, garantindo o princípio do menor privilégio.
+*   **Dar permissão para o Service account `prefect-dbt@rj-iplanrio.iam.gserviceaccount.com` e `dbt-ci-github-rj-crm-registry@rj-crm-registry.iam.gserviceaccount.com`:**
+    *   **Explicação:** Este service account é utilizado pelo Prefect e dbt para orquestração e transformação dos dados. É fundamental que ele tenha permissão para executar as transformações e gerar as tabelas intermediárias e finais que alimentarão o processo de disparo.
+*   **Validar se já existe um centro de custo para o órgão cadastrado na plataforma da wetalkie:**
+    *   **Explicação:** A plataforma da Wetalkie organiza os disparos por centro de custo, o que é crucial para o acompanhamento financeiro e a atribuição correta das campanhas. Se o órgão ainda não tiver um centro de custo, ele precisará ser criado antes de prosseguir.
+*   **Verificar se o usuário "wetalkieapi@iplanrio.com" está atrelado a esse centro de custo:**
+    *   **Explicação:** Este usuário é a interface de comunicação entre nossos sistemas e a Wetalkie. Ele deve estar devidamente associado ao centro de custo correto para que os disparos sejam contabilizados e gerenciados adequadamente.
+*   **Adicionar IDs da HSM e outras informações na criação da tabela `rj-crm-registry.crm_whatsapp.mensagem_ativa` que está dentro de "queries_rj_crm_registry/models/core/dimensions/whatsapp/dim_whatsapp_mensagem_ativa" e rodar o "dbt run":**
+    *   **Explicação:** A `mensagem_ativa` é a tabela que armazena os metadados das High-Supported Messages (HSM) aprovadas. É aqui que os IDs únicos das HSMs do WhatsApp são registrados, juntamente com suas variáveis e detalhes. Após adicionar as informações, fazer o merge com a master para que a tabela seja atualizada no BigQuery. Já solicitamos à Wetalkie uma API própria para isso.
+*   **Adicionar whitelist nessa [planilha](https://docs.google.com/spreadsheets/d/1g_l3wA2y1Xm1l6g_p4dJ2e_g_g_g_g_g_g_g_g_g_g/edit#gid=0) e avisar Bruno Almeida para rodar script:**
+
+**Resumo dos passos:**
+
+
+[ ] Testar query fornecida no BQ
+
+[ ] Adicionar novos contatos na Whitelist
+
+[ ] Pedir e aguardar Bruno Almeida rodar a liberação dos contatos
+
+[ ] Conferir se a URA Resposta está corretamente definida
+
+[ ] Conferir ID HSM da mensagem a ser disparada
+
+[ ] Conferir estado do Prefect
+
+[ ] Aguardar sinal verde da Ingrid
+
+[ ] Conferir URA e ID HSM novamente
+
+[ ] Enviar disparos via prefect
+
+### 1.2 Sequência sugerida de pré-disparo para demais times
+
+Esta seção foca nas responsabilidades de outros times que criam as queries, garantindo a qualidade e conformidade dos dados de entrada.
+
+*   **Verificar se a pessoa responsável por escrever a query tem permissão de leitura no projeto "rj-crm-registry". Se não tiver, solicite à Stella.**
+    *   **Explicação:** O projeto `rj-crm-registry` contém as tabelas de dados mestre. Sem acesso de leitura, o desenvolvedor não conseguirá construir queries válidas. A Stella é o ponto de contato para solicitação dessas permissões.
+*   **Verificar se a query está com todos os filtros necessários para o disparo conforme o exemplo descrito nesta doc:**
+    *   **Explicação:** Queries bem filtradas são essenciais para atingir o público correto e evitar envios indesejados. Isso inclui filtros demográficos, de comportamento, de opt-in, entre outros, que devem ser alinhados com o objetivo da campanha.
+*   **Verificar se foram selecionados apenas celulares cuja coluna "estrategia_envio" esteja como "ENVIAR" ou "TESTAR".**
+    *   **Explicação:** As demais categorias desta coluna têm um alto potencial de derrubar a qualidade do nosso número de WhatsApp, afetando o disparo.
+*   **Dar preferência para disparar apenas para os casos em que estrategia_envio = "ENVIAR", use "TESTAR" caso a quantidade de números a serem atingidos seja baixo ou devido à urgência de notificação dessa pessoa.**
+*   **Padronizar nomes das pessoas para primeiro nome apenas com a função `FORMAT_NAME`:**
+    *   **Explicação:** Para mensagens personalizadas, é comum usar apenas o primeiro nome para uma abordagem mais direta e menos formal. A função `FORMAT_NAME` garante que essa padronização seja aplicada de forma consistente.
+*   **Trazer primeiro o nome_social e caso seja nulo o nome atrelado àquele CPF:**
+    *   **Explicação:** Respeitar o nome social é uma questão de inclusão e conformidade. A query deve priorizar o `nome_social` e, apenas se este for nulo, utilizar o `nome` oficial associado ao CPF.
+*   **Validar se a query retorna um objeto do tipo json com as chaves: `celular_disparo`, `externalID` e `vars`:**
+    *   **Explicação:** Esta é a estrutura de saída obrigatória esperada pela pipeline de disparo. Qualquer divergência causará falhas no processamento das mensagens. O formato JSON garante a flexibilidade para as variáveis das HSMs.
+
+(exemplo da query no ponto 5. Exemplo de uso)
+
+## 2. Padronização de Dados
+
+A padronização dos dados é fundamental para a qualidade e sucesso dos disparos, evitando falhas por dados inconsistentes ou inválidos.
+
+### 2.1 Limpeza e Padronização de Telefone de Disparo
+
+A correta formatação dos números de telefone é um dos pontos mais críticos para a entrega das mensagens no WhatsApp.
+
+Caso a fonte do telefone não esteja na tabela `rj-crm-registry.rmi_dados_mestres.pessoa_fisica` do RMI, é necessário realizar essa padronização dos números utilizando a função `VALIDATE_AND_FORMAT_PHONE` criada dentro do `rj-crm-registry` e descrita abaixo. Se a fonte do telefone estiver dentro dessa tabela o telefone já está padronizado e essa etapa de validação e formatação do telefone não será necessária.
+
+*   **Padronizar o número de telefone para o qual será realizado o disparo no formato 55DDD9xxxxXXXXX:**
+    *   **Explicação:** Este é o formato internacional exigido pelo WhatsApp (DDI + DDD + Número). O DDI "55" é para o Brasil, o DDD é o código de área e o "9" é para celulares (obrigatório em muitos DDDs).
+*   **Verificar se o número é válido utilizando a função:**
+    *   **Explicação:** A função `VALIDATE_AND_FORMAT_PHONE` não apenas formata, mas também verifica a validade do número. Isso ajuda a eliminar números inexistentes ou mal formatados antes do envio, reduzindo a taxa de falha.
+*   **Se não for válido adicionar o número 9 caso necessário e o DDI 55:**
+    *   **Explicação:** A função tenta corrigir números que estejam próximos do formato correto, adicionando o dígito '9' para celulares e o DDI '55' caso estejam ausentes.
+*   **Se o telefone original não for válido puxar o telefone alternativo do RMI:**
+    *   **Explicação:** Em caso de um número principal inválido, o sistema deve buscar um telefone alternativo disponível no RMI (Registro Mestre de Informações) para tentar realizar o disparo. Isso maximiza as chances de contato.
+
+**Função:**
+
+```sql
+rj-crm-registry.udf.VALIDATE_AND_FORMAT_PHONE(phone_number: String) -> String
+```
+
+**Exemplos:**
+
+```sql
+rj-crm-registry.udf.VALIDATE_AND_FORMAT_PHONE('(21) 98888-8888') => '5521988888888'
+rj-crm-registry.udf.VALIDATE_AND_FORMAT_PHONE('123') => Null (Número inválido é retornado como Nulo)
+rj-crm-registry.udf.VALIDATE_AND_FORMAT_PHONE('(21) 3324-4233') => '5521933244233' (Adiciona o '9' para completar o formato de celular)
+```
+
+### 2.2 Limpeza e Padronização de Telefone da Unidade de Atendimento
+
+Quando o telefone de uma unidade (ex: escola, hospital, CRAS, Clínica da Família, etc) precisa ser exibido na mensagem, ele deve ter um formato amigável para o usuário.
+
+Padronizar o telefone para o formato (21) xxxx-xxxx, nos casos em que temos que enviar o telefone da escola/CF/hospital etc...
+
+**Função:**
+
+```sql
+rj-crm-registry.udf.FORMAT_PHONE_DISPLAY(phone_number: String) -> String
+```
+
+Esta função formata o número para um padrão de exibição comum no Brasil.
+
+**Exemplo:**
+
+```sql
+SELECT rj-crm-registry.udf.FORMAT_PHONE_DISPLAY("2133244233") => (21) 3324-4233
+```
+
+### 2.3 Limpeza e Padronização de Nomes
+
+A apresentação dos nomes na mensagem deve ser consistente e adequada ao contexto.
+
+Padronizar o nome das pessoas/processos/exames/etc para ter a **primeira letra de cada palavra maiúscula**. Considerar no envio apenas o primeiro nome da pessoa.
+
+**Dê preferência para** trazer primeiramente a coluna com o **nome social** e, caso este seja nulo, utilize a coluna de nome.
+
+**Função:**
+
+```sql
+rj-crm-registry.udf.FORMAT_NAME(input_name: STRING, first_only: BOOLEAN) -> String
+```
+
+*   **Explicação:** Esta função permite duas modalidades de padronização:
+    *   `first_only = True`: Retorna apenas o primeiro nome com a primeira letra maiúscula, ideal para saudações personalizadas.
+    *   `first_only = False`: Retorna o nome completo, com a primeira letra de cada palavra em maiúscula (Title Case), útil para referências formais ou nomes de processos.
+
+**Exemplo:**
+
+```sql
+SELECT rj-crm-registry.udf.FORMAT_NAME('Joaquim José da Silva Xavier', True) => 'Joaquim'
+SELECT rj-crm-registry.udf.FORMAT_NAME('Joaquim José da Silva Xavier', False) => 'Joaquim José da Silva Xavier'
+```
+
+## 3. Integração de Dados
+
+A integração de dados envolve garantir que as mensagens sejam enviadas de forma inteligente e evitem a reincidência.
+
+### 3.1 Remover telefones que já receberam aquela HSM (em manutenção)
+
+É crucial evitar o envio repetido da mesma mensagem (HSM) para o mesmo contato, a fim de não sobrecarregar o usuário e manter a reputação do nosso número.
+
+Precisamos nos atentar para não reenviar mensagens para números que já receberam aquela HSM. Para evitar esse problema pode-se utilizar a tabela `rj-crm-registry.crm_whatsapp.telefone_disparado` que contém dados do id_hsm, do telefone para qual o disparo aconteceu e todas as datas em que houve disparo para ele.
+
+*   **Explicação:** A tabela `rj-crm-registry.crm_whatsapp.telefone_disparado` atua como um histórico de envios. Ao cruzar a lista de contatos para o novo disparo com esta tabela, podemos filtrar e remover aqueles que já receberam a HSM específica em questão, controlando a frequência de comunicação. Esta funcionalidade, atualmente "em manutenção", será vital para a governança de comunicação.
+
+## 4. Especificações obrigatórias na query
+
+Para que a pipeline de disparo funcione corretamente, a query final que alimenta o sistema deve seguir um formato rigoroso.
+
+### 4.1 Coluna com o número de telefone a ser disparado DEVE SER NOMEADA CELULAR_DISPARO
+
+A coluna contendo o número de telefone do destinatário deve ter um nome específico para ser reconhecida pelo sistema.
+
+*   **Explicação:** O sistema de disparo é configurado para ler especificamente a coluna `CELULAR_DISPARO`. Qualquer outro nome resultará em falha. Esta padronização é inegociável.
+
+### 4.2 Deve existir uma coluna com nome externalID (external ID tudo junto) com o número de CPF da pessoa
+
+A coluna `externalID` (contendo o CPF) serve como um identificador único para cada destinatário. Isso permite associar o disparo a uma pessoa específica, facilitando a análise de performance das campanhas, a identificação de problemas (como números de telefone desatualizados) e a conformidade com a LGPD.
+
+Esse campo é imprescindível para conseguirmos analisar de forma fácil os disparos e tentar identificar se esse telefone de fato pertence a essa pessoa.
+
+### 4.3 Outras colunas devem ter o mesmo nome que os definidos na mensagem ativa (HSM)
+
+As variáveis personalizadas dentro da mensagem devem corresponder exatamente aos nomes das colunas na query.
+
+Suponha a seguinte mensagem ativa a ser disparada:
+
+> Olá, @NOME! Tudo bem? <br/>
+> <br/>
+> Este é o novo canal oficial de comunicação da *Prefeitura do Rio* aqui no WhatsApp. <br/>
+> <br/>
+> Seguem as informações do seu agendamento do CadÚnico: <br/>
+> <br/>
+> Local: @LOCAL. 📍 <br/>
+> Dia: @DATA. 📅  <br/>
+> Horário: @HORA. ⏰ <br/>
+> Endereço: @ENDERECO. 📍 <br/>
+> Telefone do CRAS: @TELEFONE_CRAS. 📍 <br/>
+> <br/>
+> Você confirma a sua presença?
+
+
+| Parâmetros |
+| :--- |
+| @NOME |
+| @LOCAL |
+| @DATA |
+| @HORA |
+| @TELEFONE_CRAS |
+
+Para acontecer o disparo precisamos informar os campos "nome", que representa o primeiro nome da pessoa, "local" (local em que acontecerá o atendimento), "data" no formato dd/mm/aaaa, "hora" no formato hh:mm e telefone do CRAS no formato (DDD) xxxx-xxxx. Nesse caso, precisamos que a query retorne as colunas com os seguintes nomes e formatos obrigatoriamente:
+
+| Coluna da query | Descrição | Formato esperado | Função disponível |
+| :--- | :--- | :--- | :--- |
+| celular_disparo | Celular para o qual será feito o disparo | DDIDDD9xXXXXXXX (5521981245077) (obrigatório) | VALIDATE_AND_FORMAT_PHONE |
+| externalID | Número do CPF | String de 11 dígitos  (obrigatório)| |
+| nome | Nome da pessoa que tem o agendamento | Capitalizado | FORMAT_NAME|
+| local | Local do agendamento, de preferência com endereço | Title case - cada primeira letra da palavra em maiúsculo (preferencialmente) | |
+| data | Data do agendamento | DD/MM/AAAA (preferencialmente) | |
+| hora | Hora do agendamento | HH:MM | |
+| telefone_cras | Telefone da unidade | (21) 3524-5441 | FORMAT_PHONE_DISPLAY |
+
+**Explicação:** Esta tabela detalha a correspondência exata entre os placeholders (variáveis) definidos na HSM e os nomes das colunas que a query deve retornar. Se a HSM espera um placeholder `@NOME`, a query deve ter uma coluna chamada `nome`. Além do nome, o formato dos dados também é crucial (e.g., data no formato `DD/MM/AAAA`), pois o sistema de disparo não fará conversões complexas.
+
+### 4.4 Estrutura da saída final da query
+
+A query final deve encapsular os dados em um **objeto JSON** específico para facilitar o processamento pela API do WhatsApp.
+
+A query que será executada dentro da pipeline de disparo de mensagens de WhatsApp deve receber somente os campos necessários para a HSM desejada, com as variáveis específicas de cada HSM localizadas como colunas dentro do campo "vars", como no exemplo abaixo.
+
+**Sobre o struct "vars", é importante ressaltar que os campos que ele contém devem ser nomeados com os mesmos nomes cadastrados na HSM da WeTalkie, divergências de nome não são aceitas e resultarão em falhas nos disparos.**
+
+Os campos suportados são:
+
+*   `"celular_disparo"`: número de telefone alvo do disparo.
+*   `"externalID"`: número de CPF do alvo do disparo.
+*   `"vars"`: struct que contém dados de colunas variáveis.
+
+**Exemplo de query:**
+
+**Questão:** Como enviar um disparo para uma HSM que espera receber os campos "@NOME", "@LOCAL", "@DATA", "@HORA", @TELEFONE_CRAS.
+
+**Resposta:**
+
+```sql
+SELECT
+    TO_JSON_STRING(
+        STRUCT(
+            telefone_formatado AS celular_disparo,
+            cpf AS externalID,
+            STRUCT(
+                nome,
+                local,
+                data,
+                hora,
+                telefone_cras
+            ) AS vars
+        )
+    ) AS destination_data
+FROM
+    pessoa_fisica AS pf
+```
+
+Este exemplo demonstra como construir a estrutura JSON de saída. Note que `telefone_formatado` e `cpf` são mapeados para `celular_disparo` e `externalID` respectivamente. As variáveis da HSM (`nome`, `local`, `data`, `hora`, `telefone_cras`) são agrupadas dentro do `STRUCT` nomeado `vars`. O `TO_JSON_STRING` converte este `STRUCT` em uma representação JSON string que a API da Wetalkie pode consumir.
+
+## 5. Exemplo de uso
+
+Este é um exemplo prático de uma query completa, incorporando as melhores práticas e funções de padronização discutidas.
+
+**Exemplo com**
+
+*   principais filtros
+*   uso das funções criadas
+*   criar estrutura de json com os nomes obrigatórios das chaves
+
+```sql
+WITH base AS (
+    SELECT
+        `rj-crm-registry.udf.FORMAT_NAME`(COALESCE(nome_social, nome), TRUE) AS primeiro_nome, -- traz o nome social caso houver
+        `rj-crm-registry.udf.VALIDATE_AND_FORMAT_CELLPHONE`(
+            CONCAT(
+                IFNULL(telefone.principal.ddi, "55"),
+                IFNULL(telefone.principal.ddd, "21"),
+                telefone.principal.valor
+            )
+        ) AS celular_disparo,
+        cpf AS externalID,
+        assistencia_social.cras.nome AS cras
+    FROM
+        `rj-crm-registry.rmi_dados_mestres.pessoa_fisica`
+    WHERE
+        telefone.indicador = TRUE
+        AND obito.indicador = FALSE
+        AND menor_idade = FALSE
+        AND (nome IS NOT NULL OR nome_social IS NOT NULL)
+        AND telefone.principal.estrategia_envio IN ("ENVIAR", "TESTAR")
+        AND endereco.principal.municipio = "Rio de Janeiro" -- avaliar necessidade desse filtro em cada caso pq muitas vezes o campo endereco é nulo
+        AND DATE_DIFF(CURRENT_DATE("America/Sao_Paulo"), DATE(telefone.principal.datahora_ultima_leitura), DAY) > 3 -- não enviar disparo para quem recebeu hsm nos ultimos x dias (opcional)
+)
+SELECT
+    -- celular_disparo, externalId e vars são nomes obrigatórios no retorno dessa query
+    -- outros valores importantes devem ter exatamente o mesmo nome do parâmetro definido na mensagem ativa (hsm) e devem estar dentro de vars
+    -- nesse caso, a mensagem ativa exige os parâmetros "NOME" e "CRAS"
+    TO_JSON_STRING(
+        STRUCT(
+            externalID,
+            celular_disparo,
+            STRUCT(
+                primeiro_nome AS NOME,
+                cras AS CRAS
+            ) AS vars
+        )
+    )
+FROM
+    base
+```
+
+*   **Explicação Detalhada do Exemplo:**
+    *   **CTE base:** Esta Common Table Expression (CTE) prepara os dados brutos, aplicando as funções de padronização e os filtros essenciais.
+        *   `FORMAT_NAME(COALESCE(nome_social, nome), TRUE)`: Prioriza o `nome_social` e, se nulo, usa o `nome`, retornando apenas o primeiro nome capitalizado. `COALESCE` garante que um valor não nulo seja sempre selecionado entre `nome_social` e `nome`.
+        *   `VALIDATE_AND_FORMAT_CELLPHONE(CONCAT(IFNULL(telefone.principal.ddi, "55"), IFNULL(telefone.principal.ddd, "21"), telefone.principal.valor))`: Concatena DDI (com default "55"), DDD (com default "21") e o valor do telefone, depois valida e formata o celular. `IFNULL` é crucial para evitar que valores nulos no DDI/DDD resultem em uma string de telefone vazia ou inválida.
+        *   `cpf AS externalID`: Mapeia a coluna `cpf` para o nome obrigatório `externalID`.
+        *   `assistencia_social.cras.nome AS cras`: Seleciona o nome do CRAS para ser usado como uma variável na HSM.
+    *   **Cláusula WHERE:**
+        *   `telefone.indicador = TRUE`: Garante que apenas telefones considerados principais e válidos sejam selecionados.
+        *   `obito.indicador = FALSE`: Filtra pessoas que não estão em óbito.
+        *   `menor_idade = FALSE`: Garante que apenas maiores de idade sejam contatados.
+        *   `(nome IS NOT NULL OR nome_social IS NOT NULL)`: Garante que a pessoa tenha um nome válido.
+        *   `telefone.principal.estrategia_envio IN ("ENVIAR", "TESTAR")`: Filtra pela estratégia de envio, conforme explicado na seção 1.2.
+        *   `endereco.principal.municipio = "Rio de Janeiro"`: Exemplo de filtro geográfico; é opcional e deve ser avaliado caso a caso.
+        *   `DATE_DIFF(CURRENT_DATE("America/Sao_Paulo"), DATE(telefone.principal.datahora_ultima_leitura), DAY) > 3`: Exemplo de filtro para evitar reenvios recentes para a mesma pessoa (ou para quem recebeu qualquer HSM nos últimos X dias, dependendo da interpretação do campo `datahora_ultima_leitura`).
+    *   **SELECT final:** Constrói o JSON de saída.
+        *   `TO_JSON_STRING(STRUCT(...))`: Converte o struct interno em uma string JSON.
+        *   `STRUCT(externalID, celular_disparo, STRUCT(primeiro_nome AS NOME, cras AS CRAS) AS vars)`: Cria o objeto `STRUCT` com os campos obrigatórios `externalID` e `celular_disparo` diretamente, e um `STRUCT` aninhado para `vars`, onde as variáveis da HSM (NOME, CRAS) são mapeadas dos campos `primeiro_nome` e `cras` da CTE `base`.
+
+## 6. Glossário de Terminologia para Disparos via WhatsApp Business
+
+Esta seção define os principais termos técnicos utilizados no contexto de disparos de mensagens via WhatsApp Business API, fornecendo um entendimento comum para todos os envolvidos.
+
+### 6.1 Mensagem Ativa (HSM - High-Supported Message)
+
+
+As HSMs são a base da comunicação proativa no WhatsApp Business. Elas precisam ser submetidas e aprovadas pelo WhatsApp antes de serem enviadas. Sua estrutura contém placeholders (variáveis como `@NOME`, `@DATA`) que são preenchidos dinamicamente pela query.
+
+São usadas para comunicações oficiais, como notificações, alertas e transações e enviadas de forma proativa pela empresa ao cliente. .
+
+
+### 6.2 Mensagem Receptiva (URA)
+
+Diferente das HSMs, as Mensagens Receptivas são respostas a uma interação iniciada pelo cliente. 
+
+Elas podem iniciar-se por resposta a uma mensagem ativa enviada pela empresa ou de forma indenpendente quando o cliente envia alguma mensagem para o número de whatsapp da Prefeituras. Aqui inicia-se o uso das URAs que são desenvolvidas dentro da plataforma do broker.
+
+### 6.3 Disparo
+
+Processo de envio em massa de mensagens ativas (HSM) para uma lista de destinatários.
+
+### 6.4 Falha
+
+Ao realizarmos os disparos podemos nos deparar com alguns erros que impedem a entrega de uma mensagem. Eles podem ocorrer por:
+
+
+*   **Número inválido:** Não registrado no WhatsApp ou inexistente. Ou seja, o número de telefone fornecido não está ativo no WhatsApp ou não existe na rede de telefonia. Isso pode ser mitigado com a função `VALIDATE_AND_FORMAT_PHONE`.
+*   **Limite de taxa excedido:** O WhatsApp impõe limites na quantidade de mensagens que uma empresa pode enviar em um determinado período. Exceder esses limites leva a falhas. É essencial gerenciar o volume de disparos e a reputação do número.
+*   **Bloqueio:** O cliente bloqueou o número da empresa, optou por não receber mais mensagens ou o número está em uma lista de exclusão interna. Enviar para esses contatos é contra as políticas e danifica a reputação.
+*   **Template rejeitado:** Mensagem fora do padrão aprovado pelo WhatsApp. Houve uma tentativa de enviar uma mensagem que não corresponde a uma HSM pré-aprovada, ou as variáveis foram preenchidas de forma incorreta, fazendo com que o template se descaracterize.
+
+## 7. Permissões
+
+A gestão de permissões é um pilar de segurança e funcionalidade, garantindo que apenas entidades autorizadas acessem e manipulem os dados.
+
+Para rodar os disparos via Prefect precisamos de acesso às tabelas para o agent "crm-registry-k8s". Pode-se criar uma view dos dados do disparo e fornecer permissão apenas à ela.
+
+Órgão/ Secretaria deve nos enviar o usuário do GCP que criará as queries para liberarmos acesso de "EDRio - leitor" em:
+
+*   `rj-crm-registry.rmi_dados_mestres.pessoa_fisica`
+*   `rj-crm-registry.udf`
+
+## 8. Cuidados
+
+Esta seção destaca armadilhas comuns e como evitá-las ao criar queries.
+
+### 8.1 Concatenação de colunas
+
+A concatenação de strings, especialmente para números de telefone e endereços, exige atenção aos valores nulos.
+
+Cuidado com nulls nas colunas do RMI de DDI e DDD, procure sempre utilizar a função `IFNULL` quando necessitar concatenar colunas. O mesmo vale para concatenação de endereços.
+
+*   **Explicação:** A função `CONCAT` em SQL pode retornar `NULL` se qualquer uma das colunas que estão sendo concatenadas for `NULL`. Isso é um problema crítico para números de telefone. Usar `IFNULL(coluna, 'valor_default')` garante que, se uma coluna for `NULL`, um valor padrão (como "55" para DDI ou "21" para DDD) será utilizado, evitando que o resultado da concatenação seja `NULL` e, consequentemente, que o telefone se torne inválido.
+
+**Ex:** `CONCAT(IFNULL(telefone.principal.ddi, "55"), IFNULL(telefone.principal.ddd, "21"), telefone.principal.valor) AS celular_disparo`
+
+### 8.2 Cláusula WHERE
+
+A aplicação correta de filtros na cláusula `WHERE` é fundamental para a segmentação e a conformidade dos disparos.
+
+Ao usar a tabela `pessoa_fisica`, procure filtrar apenas pessoas vivas, maiores de idade e que possuem a coluna de indicador de telefone principal como true
+
+*   **Explicação:** Estes são filtros básicos e essenciais para a maioria das campanhas:
+    *   `telefone.indicador = TRUE`: Garante que pelo menos um número de telefone existe.
+    *   `obito.indicador = FALSE`: Evita o contato com pessoas falecidas.
+    *   `menor_idade = FALSE`: Garante que apenas adultos sejam contatados, respeitando a legislação e as políticas de comunicação com menores.
+
+```sql
+WHERE telefone.indicador = TRUE AND obito.indicador = FALSE AND menor_idade = FALSE
+```
