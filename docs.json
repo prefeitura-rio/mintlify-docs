@@ -184,6 +184,18 @@
             ]
           }
         ]
+      },
+      {
+        "tab": "Disparos WhatsApp",
+        "groups": [
+          {
+            "group": "Disparos de Whatsapp",
+            "icon": "paper-plane",
+            "pages": [
+              "disparos-whatsapp/padronizacao-query"
+            ]
+          }
+        ]
       }
     ]
   },
