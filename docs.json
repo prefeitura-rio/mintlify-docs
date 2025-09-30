@@ -182,6 +182,13 @@
             "pages": [
               "rmi/conversas/chatbot"
             ]
+          },
+		  {
+            "group": "Disparos WhatsApp",
+            "icon": "paper-plane",
+            "pages": [
+              "auto-dbt-docs/disparos_whatsapp/padroes-queries"
+            ]
           }
         ]
       }
