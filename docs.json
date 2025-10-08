@@ -65,6 +65,7 @@
                 "group": "Prefect",
                 "icon": "robot",
                 "pages": [
+                  "data-lake/prefect/construindo-uma-pipeline",
                   "data-lake/prefect/migracao-de-pipeline"
                 ]
               },
