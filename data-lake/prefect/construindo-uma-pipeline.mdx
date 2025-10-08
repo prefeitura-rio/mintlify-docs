@@ -82,6 +82,11 @@ pipeline [dados_pacientes]: dados_saude_sms
 
 Após gerar o template, substitua os valores padrão no arquivo `flow.py` pelos valores específicos da sua pipeline:
 
+<Warning>
+  **IMPORTANTE**: É necessário solicitar à equipe de desenvolvimento da IplanRio para adicionar o usuário e senha do seu banco de origem no Infisical no caminho especificado em `infisical_secret_path`. 
+  Sem essas credenciais configuradas, sua pipeline não conseguirá se conectar ao banco de dados.
+</Warning>
+
 ```python
 # Exemplo de configuração em flow.py
 @flow(log_prints=True)
