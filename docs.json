@@ -101,7 +101,7 @@
           {
             "group": "Catálogo",
             "icon": "magnifying-glass",
-            "openapi": "https://raw.githubusercontent.com/prefeitura-rio/app-catalogo/refs/heads/staging/docs/openapi-v3.json"
+            "openapi": "https://raw.githubusercontent.com/prefeitura-rio/app-catalogo/refs/heads/main/docs/openapi-v3.json"
           },
           {
             "group": "Subpav OSA SMS",
