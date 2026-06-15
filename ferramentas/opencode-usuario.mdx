@@ -30,7 +30,7 @@ Após receber a Virtual Key por email, execute o comando abaixo para instalar e 
 <Tabs>
   <Tab title="Linux / macOS / WSL">
     ```bash
-    curl -fsSL https://storage.googleapis.com/iplanrio-opencode/install.sh | bash -s -- <sua-virtual-key>
+    curl -fsSL https://storage.googleapis.com/iplanrio-opencode/install.sh | bash -s -- [sua-virtual-key]
     ```
 
     O script:
@@ -40,7 +40,7 @@ Após receber a Virtual Key por email, execute o comando abaixo para instalar e 
   </Tab>
   <Tab title="Windows (PowerShell)">
     ```powershell
-    & ([scriptblock]::Create((irm 'https://storage.googleapis.com/iplanrio-opencode/install.ps1'))) -VirtualKey '<sua-virtual-key>'
+    & ([scriptblock]::Create((irm 'https://storage.googleapis.com/iplanrio-opencode/install.ps1'))) -VirtualKey '[sua-virtual-key]'
     ```
 
     O script:

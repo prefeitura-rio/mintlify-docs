@@ -154,13 +154,6 @@
             "pages": [
               "ferramentas/opencode-usuario"
             ]
-          },
-          {
-            "group": "Claude Code",
-            "pages": [
-              "ferramentas/claude-code-usuario",
-              "ferramentas/claude-code-admin"
-            ]
           }
         ]
       },
