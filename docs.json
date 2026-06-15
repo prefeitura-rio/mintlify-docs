@@ -150,6 +150,12 @@
             ]
           },
           {
+            "group": "OpenCode",
+            "pages": [
+              "ferramentas/opencode-usuario"
+            ]
+          },
+          {
             "group": "Claude Code",
             "pages": [
               "ferramentas/claude-code-usuario",

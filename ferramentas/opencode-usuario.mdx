@@ -1,0 +1,124 @@
+---
+title: "OpenCode - Guia do Usuário"
+description: "Como configurar e usar o OpenCode com Bifrost na IplanRio"
+icon: "terminal"
+---
+
+O OpenCode é um agente de IA no terminal, configurado na IplanRio para usar o Claude via Bifrost — nosso proxy centralizado de IA. Você não precisa gerenciar credenciais GCP: basta instalar e usar.
+
+## Como Solicitar Acesso
+
+1. **Acesse o canal `#dev-ia`** no Discord da IplanRio
+2. **Faça sua solicitação:**
+
+```
+🤖 Solicitação de Acesso - OpenCode
+
+Nome: [Seu nome completo]
+Email: [seu.email@prefeitura.rio]
+Área/Projeto: [Ex: Escritório de Dados, SMS, etc.]
+Justificativa: [Para que você pretende usar]
+```
+
+3. **Aguarde aprovação** da equipe de IA
+4. **Receba por email** sua Virtual Key e os comandos de instalação
+
+## Instalação e Configuração
+
+Após receber a Virtual Key por email, execute o comando abaixo para instalar e configurar o OpenCode automaticamente.
+
+<Tabs>
+  <Tab title="Linux / macOS / WSL">
+    ```bash
+    curl -fsSL https://storage.googleapis.com/iplanrio-opencode/install.sh | bash -s -- <sua-virtual-key>
+    ```
+
+    O script:
+    - Detecta seu sistema operacional e arquitetura
+    - Instala o OpenCode (via Homebrew no macOS, via release binário no Linux)
+    - Cria a configuração em `~/.config/opencode/config.json`
+  </Tab>
+  <Tab title="Windows (PowerShell)">
+    ```powershell
+    & ([scriptblock]::Create((irm 'https://storage.googleapis.com/iplanrio-opencode/install.ps1'))) -VirtualKey '<sua-virtual-key>'
+    ```
+
+    O script:
+    - Baixa o binário do OpenCode para `%LOCALAPPDATA%\Programs\opencode`
+    - Adiciona ao PATH do usuário
+    - Cria a configuração em `%APPDATA%\opencode\config.json`
+  </Tab>
+</Tabs>
+
+<Info>
+Substitua `<sua-virtual-key>` pela chave recebida no email. A Virtual Key é pessoal e intransferível.
+</Info>
+
+## Verificar Configuração
+
+```bash
+opencode --version
+```
+
+Para confirmar que o Bifrost está configurado:
+
+```bash
+opencode
+# Dentro do OpenCode:
+> /status
+```
+
+A saída deve mostrar o provider `anthropic` com baseURL `bifrost.iplan.dados.rio`.
+
+## Uso Básico
+
+```bash
+# Iniciar no diretório do projeto
+cd meu-projeto
+opencode
+
+# Modo não-interativo (útil em scripts)
+opencode -p "Explique este código"
+```
+
+Exemplos de uso no contexto municipal:
+
+```bash
+# Revisar um pipeline dbt
+opencode -p "Revise este modelo dbt e sugira melhorias de performance"
+
+# Analisar uma query SQL
+opencode -p "Otimize esta query que consulta a tabela de endereços do ERGON"
+
+# Gerar testes
+opencode -p "Gere testes para este handler Go da API RMI"
+```
+
+## Recursos
+
+- [Melhores práticas (documentação oficial)](https://www.anthropic.com/engineering/claude-code-best-practices)
+- [Curso rápido — Claude Code como agente de código (2h)](https://learn.deeplearning.ai/courses/claude-code-a-highly-agentic-coding-assistant/lesson/kkth2/setup-%26-codebase-understanding)
+- [Repositório OpenCode](https://github.com/anomalyco/opencode)
+
+## Troubleshooting
+
+**`opencode: command not found` após instalação no Linux**
+
+O binário foi instalado em `~/.local/bin`. Adicione ao PATH:
+
+```bash
+export PATH="$HOME/.local/bin:$PATH"
+# Para persistir, adicione ao ~/.bashrc ou ~/.zshrc
+```
+
+**Erro de autenticação / `401 Unauthorized`**
+
+A Virtual Key pode ter expirado ou sido revogada. Solicite uma nova no canal `#dev-ia`.
+
+**Erro de conexão com o Bifrost**
+
+Verifique se está na rede da Prefeitura ou VPN. O Bifrost (`bifrost.iplan.dados.rio`) é acessível externamente apenas por HTTPS.
+
+**Configuração corrompida**
+
+Reexecute o script de instalação com sua Virtual Key — ele sobrescreve o arquivo de configuração com os valores corretos.
