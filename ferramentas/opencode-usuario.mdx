@@ -23,7 +23,9 @@ Justificativa: [Para que você pretende usar]
 3. **Aguarde aprovação** da equipe de IA
 4. **Receba por email** sua Virtual Key e os comandos de instalação
 
-## Instalação e Configuração
+---
+
+## Instalação Automática (recomendado)
 
 Após receber a Virtual Key por email, execute o comando abaixo para instalar e configurar o OpenCode automaticamente.
 
@@ -33,10 +35,7 @@ Após receber a Virtual Key por email, execute o comando abaixo para instalar e 
     curl -fsSL https://storage.googleapis.com/iplanrio-opencode/install.sh | bash -s -- [sua-virtual-key]
     ```
 
-    O script:
-    - Detecta seu sistema operacional e arquitetura
-    - Instala o OpenCode (via Homebrew no macOS, via release binário no Linux)
-    - Cria a configuração em `~/.config/opencode/config.json`
+    O script detecta seu sistema, instala o OpenCode e cria a configuração em `~/.config/opencode/config.json`.
   </Tab>
   <Tab title="Windows (PowerShell)">
     ```powershell
@@ -44,62 +43,223 @@ Após receber a Virtual Key por email, execute o comando abaixo para instalar e 
     & "$env:TEMP\oc-install.ps1" -VirtualKey '[sua-virtual-key]'
     ```
 
-    O script:
-    - Baixa o binário do OpenCode para `%LOCALAPPDATA%\Programs\opencode`
-    - Adiciona ao PATH do usuário
-    - Cria a configuração em `%APPDATA%\opencode\config.json`
+    O script instala o binário em `%LOCALAPPDATA%\Programs\opencode`, adiciona ao PATH e cria a configuração em `%APPDATA%\opencode\config.json`.
   </Tab>
 </Tabs>
 
 <Info>
-Substitua `<sua-virtual-key>` pela chave recebida no email. A Virtual Key é pessoal e intransferível.
+Substitua `[sua-virtual-key]` pela chave recebida no email. A Virtual Key é pessoal e intransferível.
 </Info>
 
-## Verificar Configuração
+---
+
+## Configuração Manual
+
+Para quem prefere configurar manualmente, usa o **OpenCode Desktop**, ou quer adicionar o Bifrost a uma instalação existente.
+
+### 1. Instalar o OpenCode
+
+<Tabs>
+  <Tab title="macOS (Homebrew)">
+    ```bash
+    brew install anomalyco/tap/opencode
+    ```
+  </Tab>
+  <Tab title="Linux">
+    Baixe o binário na [página de releases](https://github.com/anomalyco/opencode/releases/latest) e mova para `/usr/local/bin`:
+
+    ```bash
+    curl -fsSL https://github.com/anomalyco/opencode/releases/latest/download/opencode-linux-x64.tar.gz \
+      | tar -xz -C /usr/local/bin opencode
+    chmod +x /usr/local/bin/opencode
+    ```
+
+    Para ARM64, substitua `x64` por `arm64`.
+  </Tab>
+  <Tab title="Windows">
+    Baixe o `.zip` na [página de releases](https://github.com/anomalyco/opencode/releases/latest), extraia e adicione a pasta ao PATH, ou use via **OpenCode Desktop**.
+  </Tab>
+  <Tab title="Desktop (todas as plataformas)">
+    Baixe o instalador do seu sistema na [página de releases](https://github.com/anomalyco/opencode/releases/latest):
+
+    | Sistema | Arquivo |
+    |---------|---------|
+    | macOS (Apple Silicon) | `opencode-desktop-mac-arm64.dmg` |
+    | macOS (Intel) | `opencode-desktop-mac-x64.dmg` |
+    | Windows | `opencode-desktop-win-x64.exe` |
+    | Linux (deb) | `opencode-desktop-linux-amd64.deb` |
+  </Tab>
+</Tabs>
+
+### 2. Criar o arquivo de configuração
+
+Crie ou edite o arquivo de config adicionando o bloco abaixo. Substitua `[sua-virtual-key]` pela sua chave.
+
+<Tabs>
+  <Tab title="Linux / macOS / WSL">
+    Arquivo: `~/.config/opencode/config.json`
+
+    ```json
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "model": "anthropic/claude-sonnet-4-6",
+      "provider": {
+        "anthropic": {
+          "name": "Bifrost IplanRio (Anthropic)",
+          "options": {
+            "apiKey": "[sua-virtual-key]",
+            "baseURL": "https://bifrost.iplan.dados.rio/anthropic/v1"
+          },
+          "models": {
+            "claude-sonnet-4-6": {
+              "limit": {
+                "context": 200000,
+                "output": 64000
+              }
+            }
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Windows">
+    Arquivo: `%APPDATA%\opencode\config.json`
+
+    ```json
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "model": "anthropic/claude-sonnet-4-6",
+      "provider": {
+        "anthropic": {
+          "name": "Bifrost IplanRio (Anthropic)",
+          "options": {
+            "apiKey": "[sua-virtual-key]",
+            "baseURL": "https://bifrost.iplan.dados.rio/anthropic/v1"
+          },
+          "models": {
+            "claude-sonnet-4-6": {
+              "limit": {
+                "context": 200000,
+                "output": 64000
+              }
+            }
+          }
+        }
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="Desktop">
+    Abra o OpenCode Desktop e vá em **Settings → Providers → Add Provider**:
+
+    | Campo | Valor |
+    |-------|-------|
+    | Provider | Anthropic |
+    | Name | Bifrost IplanRio (Anthropic) |
+    | API Key | `[sua-virtual-key]` |
+    | Base URL | `https://bifrost.iplan.dados.rio/anthropic/v1` |
+
+    Em seguida, defina o modelo padrão como `claude-sonnet-4-6`.
+  </Tab>
+</Tabs>
+
+### 3. Verificar
 
 ```bash
 opencode --version
 ```
 
-Para confirmar que o Bifrost está configurado:
+Abra o OpenCode e confirme o provider:
 
-```bash
+```
 opencode
-# Dentro do OpenCode:
 > /status
 ```
 
-A saída deve mostrar o provider `anthropic` com baseURL `bifrost.iplan.dados.rio`.
+A saída deve mostrar `anthropic` com `baseURL: bifrost.iplan.dados.rio`.
 
-## Uso Básico
+---
+
+## Como Usar
+
+### Interface básica
+
+Ao executar `opencode` dentro de um projeto, o agente lê o contexto do repositório e fica pronto para receber instruções em linguagem natural.
 
 ```bash
-# Iniciar no diretório do projeto
 cd meu-projeto
 opencode
-
-# Modo não-interativo (útil em scripts)
-opencode -p "Explique este código"
 ```
 
-Exemplos de uso no contexto municipal:
+Dentro do OpenCode, você pode:
+- **Digitar qualquer instrução** — o agente lê arquivos, edita código, roda comandos e itera
+- **Usar `/` para comandos** — `/status`, `/clear`, `/help`, `/exit`
+- **Colar código ou erros** diretamente no prompt
+
+### Modo não-interativo
+
+Útil para automações, scripts e CI:
 
 ```bash
-# Revisar um pipeline dbt
-opencode -p "Revise este modelo dbt e sugira melhorias de performance"
-
-# Analisar uma query SQL
-opencode -p "Otimize esta query que consulta a tabela de endereços do ERGON"
-
-# Gerar testes
-opencode -p "Gere testes para este handler Go da API RMI"
+opencode -p "Explique a função calculate_route em src/routing.py"
+opencode -p "Escreva testes para o handler POST /api/users"
+opencode -p "Corrija os erros de lint neste arquivo" < problematic_file.go
 ```
+
+### Contexto de projeto com AGENTS.md
+
+Crie um arquivo `AGENTS.md` na raiz do repositório para dar contexto permanente ao agente — stack, convenções, comandos importantes:
+
+```markdown
+# Contexto do Projeto
+
+## Stack
+- Go 1.24 + Gin
+- PostgreSQL via Cloud SQL
+- Deploy em Kubernetes (GKE)
+
+## Comandos importantes
+- `just build` — compila
+- `just test` — roda testes
+- `just lint` — verifica qualidade
+
+## Convenções
+- Commits em Conventional Commits
+- Handlers em `internal/handlers/`
+- Testes ao lado dos arquivos (`_test.go`)
+```
+
+O OpenCode lê este arquivo automaticamente a cada sessão.
+
+### Exemplos de uso no contexto IplanRio
+
+```bash
+# Revisar modelo dbt antes de abrir PR
+opencode -p "Revise este modelo dbt: cheque nomenclatura, testes e documentação"
+
+# Depurar pipeline com falha
+opencode -p "O flow Prefect está falhando com este erro. Identifique a causa e sugira a correção"
+
+# Escrever handler Go seguindo o padrão existente
+opencode -p "Crie um handler GET /api/cidadao/:cpf seguindo o padrão dos handlers existentes em internal/handlers/"
+
+# Otimizar query SQL pesada
+opencode -p "Esta query demora 8s no BigQuery. Reescreva para rodar em menos de 2s"
+
+# Gerar documentação OpenAPI
+opencode -p "Gere a documentação OpenAPI para todos os endpoints deste serviço"
+```
+
+---
 
 ## Recursos
 
 - [Melhores práticas (documentação oficial)](https://www.anthropic.com/engineering/claude-code-best-practices)
 - [Curso rápido — Claude Code como agente de código (2h)](https://learn.deeplearning.ai/courses/claude-code-a-highly-agentic-coding-assistant/lesson/kkth2/setup-%26-codebase-understanding)
 - [Repositório OpenCode](https://github.com/anomalyco/opencode)
+
+---
 
 ## Troubleshooting
 
@@ -120,6 +280,6 @@ A Virtual Key pode ter expirado ou sido revogada. Solicite uma nova no canal `#p
 
 Verifique se está na rede da Prefeitura ou VPN. O Bifrost (`bifrost.iplan.dados.rio`) é acessível externamente apenas por HTTPS.
 
-**Configuração corrompida**
+**Configuração corrompida ou modelo errado aparecendo**
 
-Reexecute o script de instalação com sua Virtual Key — ele sobrescreve o arquivo de configuração com os valores corretos.
+Reexecute o script de instalação com sua Virtual Key — ele atualiza o arquivo de configuração preservando outras configurações existentes.
