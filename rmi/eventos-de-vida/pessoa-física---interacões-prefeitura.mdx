@@ -46,24 +46,24 @@ LIMIT 100;
 
 | Coluna | Tipo | Descrição |
 |--------|------|-----------|
-| `id_interacao` | `unknown` | UUID único da interação gerado automaticamente |
-| `cpf_cidadao` | `unknown` | CPF do cidadão (11 dígitos, obrigatório) |
-| `sistema_origem` | `unknown` | Sistema fonte da interação |
-| `protocolo_origem` | `unknown` | ID/protocolo original no sistema fonte |
-| `tipo_interacao` | `unknown` | Tipo de interação segundo ontologia simplificada (SOLICITACAO, CONSUMO, COMUNICACAO, CADASTRO) |
-| `categoria_interacao` | `unknown` | Categoria da interação por domínio do serviço público |
-| `canal_interacao` | `unknown` | Canal específico utilizado na interação |
-| `modalidade_interacao` | `unknown` | Modalidade da interação (DIGITAL ou FISICO) |
-| `data_interacao` | `unknown` | Data da interação (usado para análises) |
-| `datahora_inicio` | `unknown` | Timestamp de início da interação |
-| `data_particao` | `unknown` | Data para particionamento BigQuery (deve igual data_interacao) |
-| `bairro_interacao` | `unknown` | Bairro da interação (quando disponível) |
-| `endereco_interacao` | `unknown` | Endereço estruturado da interação (quando disponível) |
-| `coordenadas` | `unknown` | Coordenadas geográficas da interação (quando disponível) |
-| `desfecho_interacao` | `unknown` | Resultado da interação (quando disponível) |
-| `dados_origem` | `unknown` | Dados originais preservados em JSON para flexibilidade |
-| `_datalake_loaded_at` | `unknown` | Timestamp de carregamento no datalake |
-| `_schema_version` | `unknown` | Versão do schema (1.1) |
+| `id_interacao` | `string` | UUID único da interação gerado automaticamente |
+| `cpf_cidadao` | `string` | CPF do cidadão (11 dígitos, obrigatório) |
+| `sistema_origem` | `string` | Sistema fonte da interação |
+| `protocolo_origem` | `string` | ID/protocolo original no sistema fonte |
+| `tipo_interacao` | `string` | Tipo de interação segundo ontologia simplificada (SOLICITACAO, CONSUMO, COMUNICACAO, CADASTRO) |
+| `categoria_interacao` | `string` | Categoria da interação por domínio do serviço público |
+| `canal_interacao` | `string` | Canal específico utilizado na interação |
+| `modalidade_interacao` | `string` | Modalidade da interação (DIGITAL ou FISICO) |
+| `data_interacao` | `date` | Data da interação (usado para análises) |
+| `datahora_inicio` | `timestamp` | Timestamp de início da interação |
+| `data_particao` | `date` | Data para particionamento BigQuery (deve igual data_interacao) |
+| `bairro_interacao` | `string` | Bairro da interação (quando disponível) |
+| `endereco_interacao` | `record` | Endereço estruturado da interação (quando disponível) |
+| `coordenadas` | `record` | Coordenadas geográficas da interação (quando disponível) |
+| `desfecho_interacao` | `string` | Resultado da interação (quando disponível) |
+| `dados_origem` | `json` | Dados originais preservados em JSON para flexibilidade |
+| `_datalake_loaded_at` | `timestamp` | Timestamp de carregamento no datalake |
+| `_schema_version` | `string` | Versão do schema (1.1) |
 
 
 

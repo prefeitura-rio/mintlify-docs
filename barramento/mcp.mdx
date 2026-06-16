@@ -1,32 +1,171 @@
 ---
 title: Model Context Protocol (MCP)
-description: "Protocolo de contexto para modelos de linguagem da Prefeitura do Rio de Janeiro"
+description: "Protocolo padronizado para conectar modelos de linguagem aos sistemas municipais da Prefeitura do Rio"
+icon: "robot"
 ---
 
-O Model Context Protocol (MCP) é um protocolo aberto que padroniza como as aplicações da Prefeitura do Rio fornecem contexto para modelos de linguagem (LLMs). Desenvolvido e mantido pela IplanRio, o MCP funciona como uma porta USB-C para aplicações de IA, fornecendo uma maneira padronizada de conectar modelos de IA a diferentes fontes de dados e ferramentas.
+O Model Context Protocol (MCP) é um protocolo aberto que padroniza como as aplicações da Prefeitura do Rio fornecem contexto para modelos de linguagem (LLMs). Mantido pela IplanRio, o MCP funciona como uma camada de integração universal entre agentes de IA e os dados e ferramentas municipais.
 
-## Por que MCP?
+## Por que MCP na Prefeitura?
 
-O MCP ajuda a construir agentes e fluxos de trabalho complexos sobre LLMs, fornecendo:
+Sem MCP, cada integração entre um LLM e um sistema municipal (BigQuery, Prefect, RMI, etc.) exige código customizado e difícil de manter. Com MCP:
 
-- Integrações pré-construídas que seu LLM pode usar diretamente
-- Flexibilidade para alternar entre provedores e fornecedores de LLM
-- Melhores práticas para proteger seus dados dentro da infraestrutura municipal
+- **Padronização**: um protocolo único para todos os sistemas municipais
+- **Segurança**: autenticação centralizada via Identidade Carioca
+- **Flexibilidade**: troque o modelo de LLM sem alterar as integrações
+- **Governança**: auditoria centralizada de todas as interações IA ↔ dados municipais
 
 ## Arquitetura
 
-### Componentes da Arquitetura
+```
+Host MCP (ex: OpenCode)
+        │
+        │  protocolo MCP (stdio / HTTP)
+        ▼
+┌───────────────────────────────────┐
+│  Servidor MCP                     │
+│  ┌─────────────┐  ┌────────────┐  │
+│  │  Resources  │  │   Tools    │  │
+│  │ (dados BQ)  │  │ (Prefect)  │  │
+│  └─────────────┘  └────────────┘  │
+│  ┌─────────────┐  ┌────────────┐  │
+│  │   Prompts   │  │  Sampling  │  │
+│  │ (templates) │  │  (LLM req) │  │
+│  └─────────────┘  └────────────┘  │
+└───────────────────────────────────┘
+        │
+        ▼
+Fontes de dados municipais
+(BigQuery, APIs, Prefect, RMI...)
+```
 
-- **Hosts MCP**: Aplicações que desejam acessar dados através do MCP
-- **Clientes MCP**: Clientes do protocolo que mantêm conexões com servidores
-- **Servidores MCP**: Programas leves que expõem capacidades específicas através do MCP
-- **Fontes de Dados**: Arquivos, bancos de dados e serviços acessíveis via MCP
+### Componentes
 
-## Recursos
+- **Host MCP**: A aplicação que usa o LLM e coordena os servidores MCP (ex: OpenCode, eAi Agent)
+- **Cliente MCP**: Componente dentro do host que gerencia a conexão com cada servidor
+- **Servidor MCP**: Serviço leve que expõe recursos municipais específicos ao LLM
+- **Fontes de Dados**: BigQuery, APIs REST, Prefect, RMI e qualquer sistema municipal
 
-### Tipos de Recursos
+## Tipos de Capacidades
 
-- **Recursos**: Expor dados e conteúdo dos servidores para LLMs
-- **Prompts**: Criar templates e fluxos de trabalho reutilizáveis
-- **Ferramentas**: Permitir que LLMs realizem ações através do servidor
-- **Sampling**: Permitir que servidores solicitem completions de LLMs
+### Resources
+
+Permitem que o LLM acesse dados municipais como arquivos ou streams:
+
+```json
+{
+  "uri": "bigquery://rj-iplanrio/gerenciamento_saude/indicadores",
+  "name": "Indicadores de Saúde SMS",
+  "description": "Métricas de saúde municipal por clínica da família",
+  "mimeType": "application/json"
+}
+```
+
+### Tools
+
+Permitem que o LLM execute ações nos sistemas municipais:
+
+```json
+{
+  "name": "executar_query_bigquery",
+  "description": "Executa uma query SQL no BigQuery municipal com validação de permissões",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "sql": { "type": "string", "description": "Query SQL a executar" },
+      "projeto": { "type": "string", "description": "Projeto GCP alvo" }
+    }
+  }
+}
+```
+
+### Prompts
+
+Templates reutilizáveis para tarefas municipais comuns:
+
+```json
+{
+  "name": "analisar_indicadores_sms",
+  "description": "Analisa indicadores de saúde e gera relatório executivo",
+  "arguments": [
+    { "name": "periodo", "description": "Período de análise (ex: 2024-Q1)" },
+    { "name": "secretaria", "description": "Secretaria responsável" }
+  ]
+}
+```
+
+## Servidores MCP Municipais
+
+A IplanRio disponibiliza servidores MCP para os principais sistemas municipais:
+
+| Servidor | Sistemas conectados | Uso principal |
+|----------|--------------------|--------------||
+| `mcp-bigquery` | BigQuery municipal | Consultas analíticas via linguagem natural |
+| `mcp-prefect` | Prefect | Monitorar e disparar pipelines de dados |
+| `mcp-rmi` | RMI API | Consultar dados de pessoas físicas |
+| `mcp-busca` | API de Busca | Pesquisar serviços e dados municipais |
+
+## Configuração com OpenCode
+
+Para usar MCP com o OpenCode na IplanRio, adicione ao `~/.config/opencode/config.json`:
+
+```json
+{
+  "model": "anthropic/claude-sonnet-4-6",
+  "provider": {
+    "anthropic": {
+      "name": "Bifrost IplanRio (Anthropic)",
+      "options": {
+        "apiKey": "<sua-virtual-key>",
+        "baseURL": "https://bifrost.iplan.dados.rio/anthropic/v1"
+      }
+    }
+  },
+  "mcp": {
+    "bigquery": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["mcp-server-bigquery", "--project", "rj-iplanrio"],
+      "env": {
+        "GOOGLE_APPLICATION_CREDENTIALS": "<path-to-service-account.json>"
+      }
+    }
+  }
+}
+```
+
+## Casos de Uso Municipais
+
+### Análise de Dados de Saúde (SMS)
+
+```
+Usuário: "Quais são as 5 clínicas da família com maior número de atendimentos 
+          no mês passado e qual a variação em relação ao mês anterior?"
+
+LLM → usa mcp-bigquery → gera e executa SQL → retorna análise formatada
+```
+
+### Monitoramento de Pipelines (IplanRio)
+
+```
+Usuário: "Algum pipeline falhou nas últimas 24h? Se sim, qual o erro?"
+
+LLM → usa mcp-prefect → lista runs com falha → resume o stack trace
+```
+
+### Consulta ao RMI
+
+```
+Usuário: "Busca o telefone de contato do cidadão com CPF 123.456.789-00"
+
+LLM → usa mcp-rmi → valida escopo → retorna dados com auditoria de acesso
+```
+
+## Segurança e Conformidade
+
+- **Autenticação**: Todos os servidores MCP requerem tokens do Identidade Carioca
+- **Auditoria**: Cada tool call é registrada com identificação do usuário e timestamp
+- **LGPD**: Dados sensíveis (CPF, saúde) só são expostos com escopos específicos aprovados
+- **Princípio do menor privilégio**: Cada servidor MCP expõe apenas o mínimo necessário
+
+Para obter acesso aos servidores MCP, entre em contato com a IplanRio via Discord no canal `#peça-permissão`.

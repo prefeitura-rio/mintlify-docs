@@ -23,7 +23,7 @@ Esta sequência detalha os passos essenciais para o time da IPLAN antes de qualq
     *   **Explicação:** Este usuário é a interface de comunicação entre nossos sistemas e a Wetalkie. Ele deve estar devidamente associado ao centro de custo correto para que os disparos sejam contabilizados e gerenciados adequadamente.
 *   **Adicionar IDs da HSM e outras informações na criação da tabela `rj-crm-registry.crm_whatsapp.mensagem_ativa` que está dentro de "queries_rj_crm_registry/models/core/dimensions/whatsapp/dim_whatsapp_mensagem_ativa" e rodar o "dbt run":**
     *   **Explicação:** A `mensagem_ativa` é a tabela que armazena os metadados das High-Supported Messages (HSM) aprovadas. É aqui que os IDs únicos das HSMs do WhatsApp são registrados, juntamente com suas variáveis e detalhes. Após adicionar as informações, fazer o merge com a master para que a tabela seja atualizada no BigQuery. Já solicitamos à Wetalkie uma API própria para isso.
-*   **Adicionar whitelist nessa [planilha](https://docs.google.com/spreadsheets/d/1g_l3wA2y1Xm1l6g_p4dJ2e_g_g_g_g_g_g_g_g_g_g/edit#gid=0) e avisar Bruno Almeida para rodar script:**
+*   **Adicionar whitelist na planilha de controle de disparos (solicitar o link ao time de dados da IplanRio) e avisar Bruno Almeida para rodar script:**
 
 **Resumo dos passos:**
 

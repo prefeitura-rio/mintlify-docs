@@ -85,6 +85,25 @@
         ]
       },
       {
+        "tab": "Barramento",
+        "groups": [
+          {
+            "group": "Visão Geral",
+            "pages": [
+              "barramento/overview"
+            ]
+          },
+          {
+            "group": "Componentes",
+            "pages": [
+              "barramento/gateway",
+              "barramento/auth",
+              "barramento/mcp"
+            ]
+          }
+        ]
+      },
+      {
         "tab": "API Reference",
         "groups": [
           {

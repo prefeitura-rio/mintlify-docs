@@ -1,40 +1,67 @@
 ---
 title: Barramento de APIs
-description: "Plataforma de integração de APIs da Prefeitura do Rio de Janeiro"
+description: "Plataforma centralizada de integração e exposição de APIs da Prefeitura do Rio de Janeiro"
+icon: "plug"
 ---
 
 O Barramento de APIs da Prefeitura do Rio é a plataforma centralizada para exposição e consumo de APIs entre os sistemas municipais, desenvolvida e mantida pela IplanRio. Garante segurança, monitoramento e governança para todas as integrações entre secretarias.
 
 ## Componentes
 
-<CardGroup cols={2}>
+<CardGroup cols={3}>
   <Card
     title="Gateway"
-    icon="plug"
+    icon="network-wired"
     href="/barramento/gateway"
   >
-    Configuração e gerenciamento do API Gateway municipal.
+    Roteamento de tráfego via Istio + GKE com proteção Cloud Armor e certificados TLS gerenciados.
   </Card>
   <Card
-    title="APIs Disponíveis"
-    icon="api"
-    href="/barramento/apis"
+    title="Autenticação"
+    icon="key"
+    href="/barramento/auth"
   >
-    Catálogo de APIs disponíveis para as secretarias municipais.
+    Autenticação JWT via Identidade Carioca, OAuth2 com escopos por secretaria e controle de acesso.
   </Card>
   <Card
-    title="Segurança"
-    icon="shield"
-    href="/barramento/seguranca"
+    title="MCP"
+    icon="robot"
+    href="/barramento/mcp"
   >
-    Políticas de segurança e autenticação para serviços municipais.
-  </Card>
-  <Card
-    title="Monitoramento"
-    icon="chart-line"
-    href="/barramento/monitoramento"
-  >
-    Métricas e logs de uso das APIs municipais.
+    Model Context Protocol para conectar sistemas municipais a modelos de linguagem de forma padronizada.
   </Card>
 </CardGroup>
 
+## Casos de Uso
+
+### Integração entre Secretarias
+
+O barramento permite que secretarias consumam dados umas das outras de forma segura e rastreável:
+
+- **SMS → SME**: Dados de saúde escolar via API autenticada por secretaria
+- **SMTR → Todas**: APIs de mobilidade em tempo real para aplicativos cidadãos
+- **SMF → Todas**: APIs financeiras para consolidação orçamentária
+
+### Serviços ao Cidadão
+
+APIs públicas expostas pelo barramento para aplicativos e portais:
+
+- **Busca Unificada**: Consulta centralizada em múltiplas coleções municipais
+- **RMI**: Registro Municipal Integrado com dados de pessoas físicas
+- **Catálogo**: Discovery e recomendação de serviços municipais
+
+## APIs Disponíveis
+
+Para a referência completa de todas as APIs expostas pelo barramento, acesse a aba [API Reference](/api-reference/overview).
+
+| API | Finalidade |
+|-----|-----------|
+| Busca | Pesquisa centralizada em dados municipais |
+| Catálogo | Discovery de serviços por perfil e grupo social |
+| RMI | Registro Municipal Integrado (pessoa física, telefone) |
+| GO | Gestão de cursos e vagas de emprego |
+| eAi Agent | Gerenciamento de agentes de IA municipais |
+| Heimdall | Autenticação e autorização centralizada |
+| Encurtador de URLs | Encurtamento e rastreamento de URLs municipais |
+| Subpav OSA SMS | Comunicações e SMS do sistema Subpav OSA |
+| Surkai | Busca semântica avançada |

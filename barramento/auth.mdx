@@ -1,39 +1,187 @@
 ---
 title: Autenticação e Segurança
-description: "Infraestrutura de autenticação e segurança da Prefeitura do Rio de Janeiro"
+description: "Autenticação JWT via Identidade Carioca, OAuth2 e controle de acesso para serviços municipais"
+icon: "key"
 ---
 
-A infraestrutura de autenticação e segurança da Prefeitura do Rio, desenvolvida e mantida pela IplanRio, fornece mecanismos centralizados para controle de acesso e proteção dos serviços municipais, garantindo a segurança dos dados e sistemas das secretarias.
+A infraestrutura de autenticação da Prefeitura do Rio é baseada no **Identidade Carioca** — o Keycloak municipal mantido pela IplanRio. Todos os serviços expostos pelo barramento exigem tokens JWT válidos emitidos por essa plataforma.
 
-## Componentes
+## Como Funciona
 
-<CardGroup cols={2}>
-  <Card
-    title="Autenticação"
-    icon="key"
-    href="/auth/autenticacao"
-  >
-    Protocolos e fluxos de autenticação municipal.
-  </Card>
-  <Card
-    title="Autorização"
-    icon="shield"
-    href="/auth/autorizacao"
-  >
-    Controle de acesso e permissões por secretaria.
-  </Card>
-  <Card
-    title="Tokens"
-    icon="ticket"
-    href="/auth/tokens"
-  >
-    Gerenciamento e validação de tokens municipais.
-  </Card>
-  <Card
-    title="Auditoria"
-    icon="clipboard-list"
-    href="/auth/auditoria"
-  >
-    Logs e rastreamento de acessos aos sistemas municipais.
-  </Card>
-</CardGroup>
+```
+Secretaria / Sistema
+        │
+        ▼
+ Identidade Carioca (Keycloak)
+  ┌─────────────────────────────┐
+  │  Realm: prefeitura-rio      │
+  │  Escopos por secretaria     │
+  │  Client Credentials / PKCE  │
+  └─────────────────────────────┘
+        │
+        ▼  JWT assinado
+ API Gateway (Istio)
+        │  valida token
+        ▼
+ Microsserviço (RMI, GO, Busca...)
+```
+
+## Fluxos de Autenticação
+
+### Client Credentials (Sistema ↔ Sistema)
+
+Para integrações entre sistemas das secretarias — sem interação humana:
+
+```bash
+# Obter token de acesso
+curl -X POST \
+  "https://identidade.carioca.rio/auth/realms/prefeitura-rio/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=sms-sistema-saude" \
+  -d "client_secret=<client-secret>"
+```
+
+**Resposta:**
+
+```json
+{
+  "access_token": "eyJhbGciOiJSUzI1NiIs...",
+  "expires_in": 300,
+  "token_type": "Bearer",
+  "scope": "sms:read sme:dados-escolares"
+}
+```
+
+Use o `access_token` nas requisições às APIs:
+
+```bash
+curl -X GET "https://services.app.dados.rio/rmi/api/v1/cidadao/12345678901" \
+  -H "Authorization: Bearer eyJhbGciOiJSUzI1NiIs..."
+```
+
+### Authorization Code + PKCE (Usuário Humano)
+
+Para aplicações web ou mobile onde um funcionário da secretaria precisa se autenticar:
+
+```
+1. Redirecionar para: https://identidade.carioca.rio/auth/realms/prefeitura-rio/protocol/openid-connect/auth
+   ?client_id=<app-id>
+   &redirect_uri=<callback>
+   &response_type=code
+   &scope=openid profile
+   &code_challenge=<PKCE-challenge>
+   &code_challenge_method=S256
+
+2. Usuário faz login com credenciais municipais
+
+3. Callback recebe `code`
+
+4. Trocar code por token:
+   POST /token com grant_type=authorization_code
+```
+
+## Escopos por Secretaria
+
+Os escopos controlam quais dados cada sistema pode acessar. Solicite à IplanRio os escopos adequados para seu caso de uso:
+
+| Escopo | Acesso |
+|--------|--------|
+| `rmi:pessoa-fisica:read` | Dados cadastrais de pessoas físicas (RMI) |
+| `rmi:telefone:read` | Dados de telefone (RMI) |
+| `sms:read` | Dados da Secretaria Municipal de Saúde |
+| `sme:read` | Dados da Secretaria Municipal de Educação |
+| `smtr:read` | Dados de transportes e mobilidade |
+| `smf:read` | Dados fiscais e financeiros |
+| `busca:search` | Pesquisa na API de Busca |
+| `catalogo:read` | Acesso ao Catálogo de serviços |
+
+<Info>
+Siga o princípio do menor privilégio: solicite apenas os escopos necessários para o seu caso de uso. Escopos sensíveis (dados de saúde, fiscal) requerem aprovação da secretaria responsável.
+</Info>
+
+## Lifecycle do Token
+
+| Parâmetro | Valor padrão | Observação |
+|-----------|-------------|------------|
+| `expires_in` | 300s (5 min) | Renovar antes de expirar |
+| `refresh_expires_in` | 1800s (30 min) | Fluxos com usuário humano |
+| Algoritmo de assinatura | RS256 | Validar com JWKS público |
+
+### Renovação Automática (Client Credentials)
+
+Para sistemas, simplesmente solicite um novo token antes que o atual expire. Não há refresh token no fluxo client credentials:
+
+```python
+import time
+import requests
+
+class TokenManager:
+    def __init__(self, client_id, client_secret):
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.token = None
+        self.expires_at = 0
+
+    def get_token(self):
+        if time.time() < self.expires_at - 30:  # 30s de margem
+            return self.token
+
+        resp = requests.post(
+            "https://identidade.carioca.rio/auth/realms/prefeitura-rio/protocol/openid-connect/token",
+            data={
+                "grant_type": "client_credentials",
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+            }
+        )
+        data = resp.json()
+        self.token = data["access_token"]
+        self.expires_at = time.time() + data["expires_in"]
+        return self.token
+```
+
+## Validação de Tokens (JWKS)
+
+Para validar tokens JWT localmente sem chamada ao Keycloak:
+
+```
+JWKS URL: https://identidade.carioca.rio/auth/realms/prefeitura-rio/protocol/openid-connect/certs
+```
+
+```python
+from jwt import PyJWKClient, decode
+
+jwks_client = PyJWKClient(
+    "https://identidade.carioca.rio/auth/realms/prefeitura-rio/protocol/openid-connect/certs"
+)
+
+def validate_token(token: str) -> dict:
+    signing_key = jwks_client.get_signing_key_from_jwt(token)
+    return decode(
+        token,
+        signing_key.key,
+        algorithms=["RS256"],
+        audience="account",
+    )
+```
+
+## Boas Práticas de Segurança
+
+- **Nunca exponha client secrets** em código-fonte ou repositórios. Use variáveis de ambiente ou Secret Manager do GCP.
+- **Sempre valide o token** no serviço de destino, mesmo que o gateway já faça a validação.
+- **Implemente rotação de secrets**: solicite à IplanRio a rotação periódica dos client secrets.
+- **Monitore uso anômalo**: tokens com comportamento suspeito (IPs incomuns, volume alto) devem ser revogados imediatamente.
+- **Logs de acesso**: registre todas as chamadas autenticadas com o `sub` do token para auditoria LGPD.
+
+## Solicitar Acesso
+
+Para obter credenciais (client_id e client_secret) para integração com os serviços municipais:
+
+1. Acesse o Discord IplanRio → canal `#peça-permissão`
+2. Informe: sistema solicitante, secretaria, escopos necessários e justificativa
+3. A IplanRio criará o client no Keycloak e enviará as credenciais por canal seguro
+
+<Warning>
+Credenciais comprometidas devem ser reportadas imediatamente à IplanRio para revogação emergencial. Use o canal `#segurança` no Discord.
+</Warning>

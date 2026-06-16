@@ -1,14 +1,114 @@
 ---
-title: Gateway
-description: "Visão geral do gateway de integração da Prefeitura do Rio de Janeiro"
+title: Gateway de Integração
+description: "Arquitetura de exposição de serviços municipais via Istio, GKE e Cloud Armor"
+icon: "network-wired"
 ---
 
-Esta solução implementa uma arquitetura robusta para exposição de aplicações e serviços no Google Kubernetes Engine (GKE) utilizando Istio como malha de serviço. O tráfego externo é direcionado para o cluster por meio de gateways configurados com endereços IP globais e registros DNS apropriados, garantindo que cada domínio relevante aponte corretamente para o ambiente Kubernetes.
+O Gateway de Integração da Prefeitura do Rio expõe aplicações e serviços municipais no Google Kubernetes Engine (GKE) com roteamento inteligente, proteção de segurança e gerenciamento automático de certificados TLS, tudo mantido pela IplanRio.
 
-A segurança do ambiente é reforçada com o uso do Google Cloud Armor, que atua como camada de proteção contra ameaças e ataques comuns, permitindo a aplicação de políticas de segurança personalizadas. Essas políticas podem incluir bloqueio de IPs maliciosos, prevenção contra injeção de SQL, XSS, e outras ameaças conhecidas, além de possibilitar a implementação de regras de limitação de taxa e inspeção de padrões de tráfego.
+## Arquitetura
 
-O gerenciamento de certificados TLS é automatizado por meio de certificados gerenciados pelo GKE, assegurando comunicação segura via HTTPS sem a necessidade de manutenção manual dos certificados. O roteamento do tráfego é realizado pelo Istio Gateway, que distribui as requisições para os serviços internos conforme regras definidas, permitindo flexibilidade e controle detalhado sobre o fluxo de dados.
+```
+Internet
+    │
+    ▼
+Cloud Armor (WAF + DDoS)
+    │
+    ▼
+IP Global + DNS (*.dados.rio)
+    │
+    ▼
+Istio Gateway (GKE)
+    │
+    ├─► Serviço A (RMI, GO, Busca...)
+    ├─► Serviço B (eAi Agent, Catálogo...)
+    └─► Serviço N (Heimdall, Surkai...)
+```
 
-Além disso, a solução contempla mecanismos de autenticação e autorização baseados em JWT, sendo que os tokens são emitidos pelo Identidade Carioca. Isso garante que apenas usuários ou sistemas autenticados possam acessar determinados serviços, conforme as necessidades de cada aplicação.
+## Componentes
 
-Em resumo, a arquitetura combina práticas recomendadas de exposição de serviços, automação de segurança, gerenciamento de certificados e controle de acesso, utilizando recursos nativos do GCP e Istio para proporcionar um ambiente seguro, escalável e de fácil manutenção.
+### Istio Service Mesh
+
+O Istio atua como malha de serviço dentro do cluster GKE. Responsabilidades:
+
+- **Roteamento de tráfego**: distribui requisições aos microsserviços conforme regras de VirtualService
+- **mTLS interno**: comunicação criptografada entre serviços dentro do cluster
+- **Observabilidade**: métricas, logs e rastreamento distribuído de cada hop interno
+- **Circuit breaking**: proteção automática contra falhas em cascata entre serviços
+
+### Google Cloud Armor
+
+Camada de segurança WAF (Web Application Firewall) na borda:
+
+- Proteção contra **SQL Injection** e **XSS**
+- Bloqueio de IPs maliciosos e ranges suspeitos
+- **Rate limiting** configurável por secretaria e por cliente
+- Regras personalizadas para padrões de tráfego municipal
+
+### Certificados TLS Gerenciados
+
+O GKE gerencia certificados TLS automaticamente via Google-managed certificates:
+
+- Renovação automática antes do vencimento
+- Cobertura de todos os subdomínios `*.dados.rio` e `*.app.dados.rio`
+- Zero manutenção manual de certificados
+- HTTPS obrigatório — HTTP é redirecionado automaticamente
+
+### DNS e Endereços IP Globais
+
+Cada serviço municipal recebe um subdomínio dedicado:
+
+| Ambiente | Padrão de URL |
+|----------|---------------|
+| Produção | `https://services.app.dados.rio/<servico>/` |
+| Staging  | `https://services.staging.app.dados.rio/<servico>/` |
+
+## Roteamento
+
+O Istio VirtualService define as regras de roteamento. Exemplo de configuração para um serviço municipal:
+
+```yaml
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: rmi-api
+  namespace: istio-system
+spec:
+  hosts:
+    - "services.app.dados.rio"
+  http:
+    - match:
+        - uri:
+            prefix: "/rmi/"
+      route:
+        - destination:
+            host: app-rmi.rmi.svc.cluster.local
+            port:
+              number: 8080
+      timeout: 30s
+      retries:
+        attempts: 3
+        perTryTimeout: 10s
+```
+
+## Autenticação no Gateway
+
+O gateway integra com o **Identidade Carioca** (Keycloak) para validar tokens JWT em todas as requisições:
+
+1. Cliente envia requisição com `Authorization: Bearer <jwt>`
+2. Istio intercepta e valida o token contra o Keycloak
+3. Claims do token são propagadas como headers internos para o serviço de destino
+4. Serviço processa a requisição com o contexto de identidade já validado
+
+Veja [Autenticação e Segurança](/barramento/auth) para detalhes sobre obtenção e uso de tokens.
+
+## Monitoramento
+
+O gateway expõe métricas para o Prometheus e logs estruturados para o Cloud Logging:
+
+- **Latência por serviço**: percentis p50, p95, p99
+- **Taxa de erros**: 4xx e 5xx por endpoint
+- **Throughput**: requisições por segundo por secretaria
+- **Saúde dos serviços**: health checks automáticos via Istio
+
+Para alertas de falha nos serviços, a IplanRio utiliza notificações via Discord no canal `#alertas-infra`.

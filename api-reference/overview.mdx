@@ -1,38 +1,119 @@
 ---
-title: "Referência das APIs"
-description: "Documentação completa das APIs da Prefeitura do Rio de Janeiro"
+title: "APIs da Prefeitura do Rio"
+description: "Referência completa das APIs municipais para integração com os sistemas da Prefeitura do Rio de Janeiro"
+icon: "plug"
 ---
 
-Bem-vindo à documentação das APIs da Prefeitura do Rio de Janeiro. Aqui você encontrará a documentação completa de todas as APIs disponíveis para integração com os sistemas municipais.
+A IplanRio mantém um conjunto de APIs padronizadas que permitem às secretarias municipais e parceiros consumir dados e serviços da Prefeitura do Rio de forma segura, rastreável e versionada.
+
+## Autenticação
+
+Todas as APIs utilizam **JWT Bearer tokens** emitidos pelo **Identidade Carioca** (Keycloak municipal). Inclua o token em cada requisição:
+
+```http
+Authorization: Bearer <seu-jwt-token>
+```
+
+Para obter um token, faça uma requisição ao endpoint de autenticação do seu realm:
+
+```bash
+curl -X POST https://identidade.carioca.rio/auth/realms/<realm>/protocol/openid-connect/token \
+  -d "grant_type=client_credentials" \
+  -d "client_id=<client-id>" \
+  -d "client_secret=<client-secret>"
+```
+
+Os escopos disponíveis variam por secretaria. Solicite à equipe da IplanRio os escopos adequados para o seu caso de uso.
 
 ## APIs Disponíveis
 
-### Busca
-API para busca centralizada da Prefeitura do Rio de Janeiro, permitindo consultas em múltiplas coleções de dados municipais.
+<CardGroup cols={2}>
+  <Card title="Busca" icon="magnifying-glass" href="/api-reference/busca">
+    Pesquisa centralizada em múltiplas coleções de dados municipais com ranking de relevância.
+  </Card>
+  <Card title="Catálogo" icon="book-open" href="/api-reference/catálogo">
+    Discovery de serviços municipais com recomendação inteligente por perfil e grupo social.
+  </Card>
+  <Card title="RMI" icon="address-book" href="/api-reference/registro-municipal-integrado">
+    Registro Municipal Integrado — dados de pessoas físicas, telefones e histórico de interações.
+  </Card>
+  <Card title="GO" icon="briefcase" href="/api-reference/go">
+    Gestão de cursos e vagas de emprego disponibilizados pela Prefeitura.
+  </Card>
+  <Card title="eAi Agent" icon="robot" href="/api-reference/eai-agent">
+    Gerenciamento de fluxos e ferramentas dos agentes de IA municipais.
+  </Card>
+  <Card title="Heimdall" icon="shield-check" href="/api-reference/heimdall-api">
+    Autenticação e autorização centralizadas para serviços municipais.
+  </Card>
+  <Card title="Encurtador de URLs" icon="link" href="/api-reference/encurtador-de-urls">
+    Encurtamento, rastreamento e gestão de URLs para campanhas municipais.
+  </Card>
+  <Card title="Subpav OSA SMS" icon="message" href="/api-reference/subpav-osa-sms">
+    Sistema Subpav OSA para gerenciamento de SMS e comunicações operacionais.
+  </Card>
+  <Card title="Surkai" icon="sparkles" href="/api-reference/surkai">
+    Busca semântica avançada com embeddings para dados municipais.
+  </Card>
+</CardGroup>
 
-### Serviço de Busca  
-Serviço de busca avançado com funcionalidades específicas para o ecossistema da prefeitura.
+## Ambientes
 
-### Subpav OSA SMS
-API do sistema Subpav OSA (Operação de Serviços de Apoio) para gerenciamento de SMS e comunicações.
+| Ambiente | Base URL | Uso |
+|----------|----------|-----|
+| Produção | `https://services.app.dados.rio` | Sistemas em produção |
+| Staging | `https://services.staging.app.dados.rio` | Testes e integração |
 
-### eAi Agent
-API que gerencia os fluxos e ferramentas dos agentes de IA da Prefeitura do Rio de Janeiro.
+<Warning>
+Sempre use o ambiente de staging para desenvolvimento e testes. Nunca execute testes com carga ou dados de produção diretamente na produção.
+</Warning>
 
-### Registro Municipal Integrado (RMI)
-API do sistema RMI para acesso aos dados integrados do registro municipal.
+## Rate Limiting
 
-### GO
-API do sistema GO para gestão de processos municipais.
+As APIs aplicam rate limiting por secretaria e por cliente. Os limites são retornados nos headers de resposta:
 
-## Começando
+```http
+X-RateLimit-Limit: 1000
+X-RateLimit-Remaining: 847
+X-RateLimit-Reset: 1719446400
+```
 
-Para utilizar qualquer uma das APIs:
+Ao atingir o limite, a API retorna `429 Too Many Requests`. Implemente backoff exponencial nas suas integrações.
 
-1. **Autenticação**: Verifique os requisitos de autenticação na documentação específica de cada API
-2. **Rate Limiting**: Respeite os limites de taxa definidos para cada endpoint
-3. **Ambiente**: As APIs estão disponíveis no ambiente staging para testes
+## Erros Comuns
+
+| Código | Significado | Ação |
+|--------|-------------|------|
+| `401 Unauthorized` | Token ausente ou expirado | Renovar o JWT |
+| `403 Forbidden` | Escopo insuficiente | Solicitar escopos corretos à IplanRio |
+| `404 Not Found` | Recurso não encontrado | Verificar o identificador enviado |
+| `422 Unprocessable Entity` | Dados de entrada inválidos | Revisar o payload |
+| `429 Too Many Requests` | Rate limit atingido | Aguardar e usar backoff exponencial |
+| `500 Internal Server Error` | Erro do servidor | Contatar a IplanRio |
+
+## Exemplos de Integração
+
+### Buscar um cidadão pelo CPF (RMI)
+
+```bash
+curl -X GET "https://services.app.dados.rio/rmi/api/v1/cidadao/12345678901" \
+  -H "Authorization: Bearer <token>" \
+  -H "Accept: application/json"
+```
+
+### Pesquisar serviços municipais (Busca)
+
+```bash
+curl -X POST "https://services.app.dados.rio/busca/api/v1/search" \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "vacina infantil", "collections": ["saude", "sme"]}'
+```
 
 ## Suporte
 
-Para dúvidas sobre as APIs, entre em contato através dos canais oficiais da IplanRio. 
+Para dúvidas sobre APIs, acesso, escopos ou problemas técnicos:
+
+- **Discord IplanRio**: Canal `#suporte-apis`
+- **Email**: dados@iplan.rio.rj.gov.br
+- **GitHub**: [prefeitura-rio](https://github.com/prefeitura-rio)
