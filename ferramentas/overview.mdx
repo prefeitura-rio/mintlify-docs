@@ -1,32 +1,45 @@
 ---
 title: "Ferramentas de Desenvolvimento"
-description: "Conjunto de ferramentas de desenvolvimento e integração para as secretarias municipais"
+description: "Ferramentas de IA e desenvolvimento para as secretarias municipais da Prefeitura do Rio"
 icon: "toolbox"
 ---
 
-As ferramentas de desenvolvimento da infraestrutura de integração da Prefeitura do Rio facilitam o trabalho de desenvolvedores das secretarias municipais, oferecendo recursos especializados para construção, manutenção e otimização de sistemas municipais.
+A IplanRio disponibiliza ferramentas de IA integradas à infraestrutura municipal — com acesso centralizado, autenticado e auditado via Bifrost, nosso proxy de IA.
 
-Mantidas pela IplanRio, estas ferramentas são projetadas para atender às necessidades específicas do ecossistema municipal, considerando os requisitos de segurança, compliance e escala das operações da cidade.
+Não é necessário gerenciar credenciais de cloud ou chaves de API diretamente: basta solicitar acesso e começar a usar.
 
 ## Ferramentas Disponíveis
 
-### Desenvolvimento com IA
-
 <CardGroup cols={2}>
-  <Card title="Claude Code - Usuário" icon="user" href="/ferramentas/claude-code-usuario">
-    Guia para solicitar e usar o Claude Code com Vertex AI
+  <Card title="OpenCode" icon="terminal" href="/ferramentas/opencode-usuario">
+    Agente de IA no terminal. Escreve, revisa, refatora e testa código com contexto do repositório. Suporta Linux, macOS, WSL e Windows.
   </Card>
-  <Card title="Claude Code - Admin" icon="shield-halved" href="/ferramentas/claude-code-admin">
-    Configuração e gestão administrativa do Claude Code
-  </Card>
-</CardGroup>
-
-## Próximos Passos
-
-<CardGroup cols={1}>
-  <Card title="Começar com Claude Code" icon="rocket" href="/ferramentas/claude-code-usuario">
-    Solicite acesso ao Claude Code e configure seu ambiente de desenvolvimento
+  <Card title="OpenCode Desktop" icon="display" href="/ferramentas/opencode-usuario#configuração-manual">
+    Versão com interface gráfica do OpenCode. Mesma Virtual Key, mesma configuração Bifrost.
   </Card>
 </CardGroup>
 
-Para dúvidas sobre ferramentas ou sugestões de novas funcionalidades, acesse o canal `#dev-ia` no Discord da IplanRio ou entre em contato com a equipe de arquitetura.
+## Como Funciona o Acesso
+
+```
+Você  →  solicita no Discord (#peça-permissão)
+       →  recebe Virtual Key por email
+       →  roda o script de instalação
+       →  usa o OpenCode com Claude via Bifrost
+```
+
+O **Bifrost** é o proxy centralizado de IA da IplanRio. Ele autentica as requisições, controla o acesso por Virtual Key e faz o roteamento para o modelo correto no Google Vertex AI — sem que você precise configurar nada de GCP.
+
+## Modelo Disponível
+
+| Modelo | Provider | Uso recomendado |
+|--------|----------|-----------------|
+| Claude Sonnet 4.6 | Anthropic via Vertex AI | Desenvolvimento, revisão de código, análise de dados |
+
+## Solicitar Acesso
+
+Acesse o canal **`#peça-permissão`** no Discord da IplanRio com nome, email e justificativa de uso. A aprovação é feita pela equipe de IA e o acesso é provisionado automaticamente.
+
+<Card title="Guia completo do OpenCode" icon="rocket" href="/ferramentas/opencode-usuario">
+  Instalação, configuração manual, uso avançado e exemplos no contexto municipal
+</Card>

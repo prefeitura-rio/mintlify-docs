@@ -1,15 +1,19 @@
 ---
 title: "OpenCode - Guia do Usuário"
-description: "Como configurar e usar o OpenCode com Bifrost na IplanRio"
+description: "Como instalar, configurar e usar o OpenCode com Bifrost na IplanRio"
 icon: "terminal"
 ---
 
-O OpenCode é um agente de IA no terminal, configurado na IplanRio para usar o Claude via Bifrost — nosso proxy centralizado de IA. Você não precisa gerenciar credenciais GCP: basta instalar e usar.
+O OpenCode é um agente de IA no terminal que lê o contexto do seu repositório e executa tarefas de desenvolvimento de ponta a ponta — escreve, edita, testa e refatora código com base em instruções em linguagem natural.
+
+Na IplanRio, o OpenCode é configurado via **Bifrost**, nosso proxy centralizado de IA. Você não gerencia credenciais de cloud: basta sua Virtual Key.
+
+---
 
 ## Como Solicitar Acesso
 
-1. **Acesse o canal `#peça-permissão`** no Discord da IplanRio
-2. **Faça sua solicitação:**
+1. Acesse o canal **`#peça-permissão`** no Discord da IplanRio
+2. Envie sua solicitação:
 
 ```
 🤖 Solicitação de Acesso - OpenCode
@@ -20,14 +24,12 @@ Email: [seu.email@prefeitura.rio]
 Justificativa: [Para que você pretende usar]
 ```
 
-3. **Aguarde aprovação** da equipe de IA
-4. **Receba por email** sua Virtual Key e os comandos de instalação
+3. Aguarde aprovação da equipe de IA
+4. Receba por email sua **Virtual Key** e os comandos de instalação
 
 ---
 
-## Instalação Automática (recomendado)
-
-Após receber a Virtual Key por email, execute o comando abaixo para instalar e configurar o OpenCode automaticamente.
+## Instalação Automática
 
 <Tabs>
   <Tab title="Linux / macOS / WSL">
@@ -35,7 +37,7 @@ Após receber a Virtual Key por email, execute o comando abaixo para instalar e 
     curl -fsSL https://storage.googleapis.com/iplanrio-opencode/install.sh | bash -s -- [sua-virtual-key]
     ```
 
-    O script detecta seu sistema, instala o OpenCode e cria a configuração em `~/.config/opencode/config.json`.
+    O script detecta seu sistema, instala o OpenCode e cria `~/.config/opencode/config.json` com o Bifrost configurado.
   </Tab>
   <Tab title="Windows (PowerShell)">
     ```powershell
@@ -43,12 +45,12 @@ Após receber a Virtual Key por email, execute o comando abaixo para instalar e 
     & "$env:TEMP\oc-install.ps1" -VirtualKey '[sua-virtual-key]'
     ```
 
-    O script instala o binário em `%LOCALAPPDATA%\Programs\opencode`, adiciona ao PATH e cria a configuração em `%APPDATA%\opencode\config.json`.
+    Instala o binário em `%LOCALAPPDATA%\Programs\opencode` e cria `%APPDATA%\opencode\config.json`.
   </Tab>
 </Tabs>
 
 <Info>
-Substitua `[sua-virtual-key]` pela chave recebida no email. A Virtual Key é pessoal e intransferível.
+A Virtual Key é pessoal e intransferível. Se reexecutar o script com uma nova chave, a configuração é atualizada preservando outras configurações existentes.
 </Info>
 
 ---
@@ -57,7 +59,7 @@ Substitua `[sua-virtual-key]` pela chave recebida no email. A Virtual Key é pes
 
 Para quem prefere configurar manualmente, usa o **OpenCode Desktop**, ou quer adicionar o Bifrost a uma instalação existente.
 
-### 1. Instalar o OpenCode
+### Instalar o OpenCode
 
 <Tabs>
   <Tab title="macOS (Homebrew)">
@@ -66,39 +68,35 @@ Para quem prefere configurar manualmente, usa o **OpenCode Desktop**, ou quer ad
     ```
   </Tab>
   <Tab title="Linux">
-    Baixe o binário na [página de releases](https://github.com/anomalyco/opencode/releases/latest) e mova para `/usr/local/bin`:
-
     ```bash
     curl -fsSL https://github.com/anomalyco/opencode/releases/latest/download/opencode-linux-x64.tar.gz \
       | tar -xz -C /usr/local/bin opencode
     chmod +x /usr/local/bin/opencode
     ```
 
-    Para ARM64, substitua `x64` por `arm64`.
+    Para ARM64 substitua `x64` por `arm64`.
   </Tab>
   <Tab title="Windows">
-    Baixe o `.zip` na [página de releases](https://github.com/anomalyco/opencode/releases/latest), extraia e adicione a pasta ao PATH, ou use via **OpenCode Desktop**.
+    Baixe o `.zip` em [releases](https://github.com/anomalyco/opencode/releases/latest) e adicione a pasta ao PATH.
   </Tab>
-  <Tab title="Desktop (todas as plataformas)">
-    Baixe o instalador do seu sistema na [página de releases](https://github.com/anomalyco/opencode/releases/latest):
-
+  <Tab title="Desktop">
     | Sistema | Arquivo |
     |---------|---------|
-    | macOS (Apple Silicon) | `opencode-desktop-mac-arm64.dmg` |
-    | macOS (Intel) | `opencode-desktop-mac-x64.dmg` |
+    | macOS Apple Silicon | `opencode-desktop-mac-arm64.dmg` |
+    | macOS Intel | `opencode-desktop-mac-x64.dmg` |
     | Windows | `opencode-desktop-win-x64.exe` |
     | Linux (deb) | `opencode-desktop-linux-amd64.deb` |
+
+    Baixe em [releases](https://github.com/anomalyco/opencode/releases/latest).
   </Tab>
 </Tabs>
 
-### 2. Criar o arquivo de configuração
+### Arquivo de configuração
 
-Crie ou edite o arquivo de config adicionando o bloco abaixo. Substitua `[sua-virtual-key]` pela sua chave.
+Crie ou edite o arquivo abaixo com sua Virtual Key:
 
 <Tabs>
-  <Tab title="Linux / macOS / WSL">
-    Arquivo: `~/.config/opencode/config.json`
-
+  <Tab title="Linux / macOS — ~/.config/opencode/config.json">
     ```json
     {
       "$schema": "https://opencode.ai/config.json",
@@ -123,9 +121,7 @@ Crie ou edite o arquivo de config adicionando o bloco abaixo. Substitua `[sua-vi
     }
     ```
   </Tab>
-  <Tab title="Windows">
-    Arquivo: `%APPDATA%\opencode\config.json`
-
+  <Tab title="Windows — %APPDATA%\opencode\config.json">
     ```json
     {
       "$schema": "https://opencode.ai/config.json",
@@ -151,7 +147,7 @@ Crie ou edite o arquivo de config adicionando o bloco abaixo. Substitua `[sua-vi
     ```
   </Tab>
   <Tab title="Desktop">
-    Abra o OpenCode Desktop e vá em **Settings → Providers → Add Provider**:
+    Vá em **Settings → Providers → Add Provider**:
 
     | Campo | Valor |
     |-------|-------|
@@ -160,95 +156,271 @@ Crie ou edite o arquivo de config adicionando o bloco abaixo. Substitua `[sua-vi
     | API Key | `[sua-virtual-key]` |
     | Base URL | `https://bifrost.iplan.dados.rio/anthropic/v1` |
 
-    Em seguida, defina o modelo padrão como `claude-sonnet-4-6`.
+    Defina o modelo padrão como `claude-sonnet-4-6`.
   </Tab>
 </Tabs>
 
-### 3. Verificar
+### Verificar
 
 ```bash
 opencode --version
 ```
 
-Abra o OpenCode e confirme o provider:
+Abra o OpenCode e confirme com `/status`:
 
 ```
-opencode
 > /status
+API Provider: Anthropic (Bifrost IplanRio)
+Model: claude-sonnet-4-6
 ```
-
-A saída deve mostrar `anthropic` com `baseURL: bifrost.iplan.dados.rio`.
 
 ---
 
 ## Como Usar
 
-### Interface básica
+### Início rápido
 
-Ao executar `opencode` dentro de um projeto, o agente lê o contexto do repositório e fica pronto para receber instruções em linguagem natural.
+Execute `opencode` dentro do diretório do projeto. O agente lê o repositório e fica pronto para instruções:
 
 ```bash
 cd meu-projeto
 opencode
 ```
 
-Dentro do OpenCode, você pode:
-- **Digitar qualquer instrução** — o agente lê arquivos, edita código, roda comandos e itera
-- **Usar `/` para comandos** — `/status`, `/clear`, `/help`, `/exit`
-- **Colar código ou erros** diretamente no prompt
+Digite qualquer instrução em linguagem natural. O agente lê os arquivos relevantes, propõe e executa edições, roda comandos de build e lint para verificar e itera até concluir.
+
+### Comandos internos
+
+Dentro do OpenCode, use `/` para acessar funções do sistema:
+
+| Comando | O que faz |
+|---------|-----------|
+| `/status` | Exibe provider, modelo e uso da sessão |
+| `/clear` | Limpa o histórico da conversa atual |
+| `/compact` | Comprime o histórico para economizar contexto |
+| `/help` | Lista todos os comandos disponíveis |
+| `/exit` | Encerra o OpenCode |
 
 ### Modo não-interativo
 
-Útil para automações, scripts e CI:
+Ideal para automações e integração com outros comandos:
 
 ```bash
-opencode -p "Explique a função calculate_route em src/routing.py"
-opencode -p "Escreva testes para o handler POST /api/users"
-opencode -p "Corrija os erros de lint neste arquivo" < problematic_file.go
+# Instrução pontual
+opencode -p "Explique o que a função calculate_tax faz e seus edge cases"
+
+# Passando arquivo via stdin
+opencode -p "Revise este código e aponte problemas" < src/handler.go
+
+# Encadeando com git
+git diff HEAD~1 | opencode -p "Resuma as mudanças deste diff em português"
 ```
 
-### Contexto de projeto com AGENTS.md
+### Permissões
 
-Crie um arquivo `AGENTS.md` na raiz do repositório para dar contexto permanente ao agente — stack, convenções, comandos importantes:
+Para projetos onde você quer que o agente trabalhe com mais autonomia, sem confirmar cada passo, adicione ao `config.json`:
+
+```json
+{
+  "permission": {
+    "bash": "allow",
+    "edit": "allow",
+    "write": "allow",
+    "read": "allow"
+  }
+}
+```
+
+<Warning>
+Use permissões abertas apenas em repositórios onde você tem controle total. Em repositórios compartilhados, prefira o modo padrão com confirmação a cada ação.
+</Warning>
+
+---
+
+## Contexto de projeto com AGENTS.md
+
+Crie um `AGENTS.md` na raiz do repositório para dar contexto permanente ao agente — o OpenCode lê este arquivo automaticamente em toda sessão.
+
+### Estrutura recomendada
 
 ```markdown
-# Contexto do Projeto
+# [Nome do Projeto]
 
 ## Stack
-- Go 1.24 + Gin
-- PostgreSQL via Cloud SQL
-- Deploy em Kubernetes (GKE)
+- [Linguagem e versão]
+- [Framework principal]
+- [Banco de dados / infra]
 
 ## Comandos importantes
 - `just build` — compila
 - `just test` — roda testes
 - `just lint` — verifica qualidade
 
+## Estrutura do projeto
+[Breve descrição das pastas principais]
+
 ## Convenções
-- Commits em Conventional Commits
-- Handlers em `internal/handlers/`
-- Testes ao lado dos arquivos (`_test.go`)
+[Padrões de código, nomenclatura, commits]
+
+## O que NÃO fazer
+[Antipadrões, arquivos que não devem ser alterados]
 ```
 
-O OpenCode lê este arquivo automaticamente a cada sessão.
+### Exemplos por tipo de repositório IplanRio
 
-### Exemplos de uso no contexto IplanRio
+<Tabs>
+  <Tab title="API Go (Gin)">
+    ```markdown
+    # API [Nome]
+
+    ## Stack
+    - Go 1.24 + Gin
+    - PostgreSQL via Cloud SQL (driver pgx)
+    - Autenticação via JWT (Keycloak)
+    - Deploy em GKE
+
+    ## Comandos
+    - `just build` — compila o binário
+    - `just test` — roda testes com cobertura
+    - `just lint` — golangci-lint
+    - `just run` — inicia localmente com .env
+
+    ## Estrutura
+    - `cmd/` — entrypoints (main.go)
+    - `internal/handlers/` — handlers HTTP
+    - `internal/service/` — lógica de negócio
+    - `internal/repository/` — acesso ao banco
+
+    ## Convenções
+    - Handlers retornam apenas HTTP; lógica fica em service/
+    - Erros sempre propagados com contexto: `fmt.Errorf("...: %w", err)`
+    - Testes ao lado dos arquivos (`_test.go`)
+    - Commits em Conventional Commits (feat/fix/chore)
+    ```
+  </Tab>
+  <Tab title="Pipeline dbt">
+    ```markdown
+    # Pipeline dbt — [Nome]
+
+    ## Stack
+    - dbt + BigQuery
+    - Prefect para orquestração
+
+    ## Comandos
+    - `dbt run` — executa os modelos
+    - `dbt test` — roda os testes
+    - `dbt docs generate && dbt docs serve` — documentação local
+
+    ## Estrutura de camadas
+    - `models/raw_` — dados brutos sem transformação
+    - `models/int_` — transformações intermediárias
+    - `models/dim_` / `models/fct_` — marts de consumo
+
+    ## Convenções de nomenclatura
+    - Tabelas: `<camada>_<fonte>__<entidade>` (ex: `raw_ergon__servidores`)
+    - Colunas de data: sufixo `_data` (ex: `data_admissao`)
+    - IDs externos: sufixo `_id` (ex: `matricula_id`)
+    - Toda tabela deve ter testes de `not_null` e `unique` na PK
+
+    ## O que NÃO fazer
+    - Nunca colocar lógica de negócio em raw_
+    - Não usar SELECT * em marts
+    ```
+  </Tab>
+  <Tab title="Script Python / Prefect">
+    ```markdown
+    # [Nome do flow] — Prefect
+
+    ## Stack
+    - Python 3.12 + uv
+    - Prefect 3
+    - BigQuery como destino
+
+    ## Comandos
+    - `uv run python flow.py` — executa localmente
+    - `uv run pytest` — roda testes
+    - `uv run ruff check .` — lint
+
+    ## Estrutura
+    - `flow.py` — definição principal do flow
+    - `tasks/` — tasks Prefect reutilizáveis
+    - `utils/` — helpers sem dependência de Prefect
+
+    ## Convenções
+    - Tasks são funções puras sempre que possível
+    - Segredos via `Secret.load("nome-do-secret")`
+    - Logs com `get_run_logger()`, nunca `print()`
+    - Type hints obrigatórios em todas as funções
+    ```
+  </Tab>
+</Tabs>
+
+---
+
+## Fluxo de trabalho típico
+
+### Desenvolvimento de feature
 
 ```bash
-# Revisar modelo dbt antes de abrir PR
-opencode -p "Revise este modelo dbt: cheque nomenclatura, testes e documentação"
+git checkout -b feat/nova-feature
+opencode
+# Descreva o que quer construir:
+> Implemente o endpoint POST /api/vagas com campos [título, descrição, secretaria],
+  validação no padrão dos handlers existentes e persistência no banco.
+  Escreva os testes de integração junto.
 
-# Depurar pipeline com falha
-opencode -p "O flow Prefect está falhando com este erro. Identifique a causa e sugira a correção"
+# O agente lê os handlers existentes, cria o novo, escreve os testes e roda just test
+```
 
-# Escrever handler Go seguindo o padrão existente
-opencode -p "Crie um handler GET /api/cidadao/:cpf seguindo o padrão dos handlers existentes em internal/handlers/"
+### Code review antes do PR
 
-# Otimizar query SQL pesada
-opencode -p "Esta query demora 8s no BigQuery. Reescreva para rodar em menos de 2s"
+```bash
+git diff main | opencode -p "
+Revise este diff como code reviewer experiente em Go.
+Aponte bugs, problemas de segurança, desvios das convenções e melhorias de performance.
+Seja direto e específico com número de linha.
+"
+```
 
-# Gerar documentação OpenAPI
-opencode -p "Gere a documentação OpenAPI para todos os endpoints deste serviço"
+### Depuração de erro
+
+```bash
+opencode -p "
+Estou recebendo este erro em produção:
+[cole o stack trace aqui]
+
+Analise o código em internal/service/payment.go e identifique a causa raiz.
+"
+```
+
+### Escrita de commits
+
+```bash
+git diff --staged | opencode -p "
+Escreva uma mensagem de commit em Conventional Commits para este diff.
+Seja específico sobre o que mudou e por quê.
+"
+```
+
+---
+
+## Exemplos no contexto IplanRio
+
+```bash
+# Revisar modelo dbt antes do PR
+opencode -p "Revise models/fct_servidores.sql: nomenclatura, testes ausentes e otimizações"
+
+# Criar handler Go seguindo padrão do projeto
+opencode -p "Crie GET /api/cidadao/:cpf seguindo o padrão de internal/handlers/servidor.go"
+
+# Otimizar query BigQuery lenta
+opencode -p "Esta query demora 45s. Reescreva usando particionamento e clustering adequados"
+
+# Documentar endpoints
+opencode -p "Gere a spec OpenAPI 3.0 para todos os endpoints em internal/handlers/"
+
+# Migração de dados
+opencode -p "Escreva script Python que migra ergon.servidores para o formato RMI com validação e relatório de erros"
 ```
 
 ---
@@ -256,8 +428,9 @@ opencode -p "Gere a documentação OpenAPI para todos os endpoints deste serviç
 ## Recursos
 
 - [Melhores práticas (documentação oficial)](https://www.anthropic.com/engineering/claude-code-best-practices)
-- [Curso rápido — Claude Code como agente de código (2h)](https://learn.deeplearning.ai/courses/claude-code-a-highly-agentic-coding-assistant/lesson/kkth2/setup-%26-codebase-understanding)
+- [Curso — Claude Code como agente de código (2h)](https://learn.deeplearning.ai/courses/claude-code-a-highly-agentic-coding-assistant/lesson/kkth2/setup-%26-codebase-understanding)
 - [Repositório OpenCode](https://github.com/anomalyco/opencode)
+- [Releases e changelogs](https://github.com/anomalyco/opencode/releases)
 
 ---
 
@@ -269,17 +442,21 @@ O binário foi instalado em `~/.local/bin`. Adicione ao PATH:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
-# Para persistir, adicione ao ~/.bashrc ou ~/.zshrc
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc  # ou ~/.zshrc
 ```
 
-**Erro de autenticação / `401 Unauthorized`**
+**`401 Unauthorized` ao usar o OpenCode**
 
-A Virtual Key pode ter expirado ou sido revogada. Solicite uma nova no canal `#peça-permissão`.
+A Virtual Key expirou ou foi revogada. Solicite uma nova no `#peça-permissão`.
 
 **Erro de conexão com o Bifrost**
 
-Verifique se está na rede da Prefeitura ou VPN. O Bifrost (`bifrost.iplan.dados.rio`) é acessível externamente apenas por HTTPS.
+O Bifrost (`bifrost.iplan.dados.rio`) requer HTTPS na porta 443. Verifique sua conexão ou VPN.
 
-**Configuração corrompida ou modelo errado aparecendo**
+**Modelo errado aparecendo**
 
-Reexecute o script de instalação com sua Virtual Key — ele atualiza o arquivo de configuração preservando outras configurações existentes.
+Confirme que `"model": "anthropic/claude-sonnet-4-6"` está no nível raiz do `config.json`. Reexecute o script de instalação se necessário.
+
+**Agente editando arquivos que não deveria**
+
+Remova o bloco `"permission"` do `config.json` para voltar ao modo com confirmação a cada ação.
