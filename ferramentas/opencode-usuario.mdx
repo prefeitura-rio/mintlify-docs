@@ -41,8 +41,7 @@ Justificativa: [Para que você pretende usar]
   </Tab>
   <Tab title="Windows (PowerShell)">
     ```powershell
-    irm https://storage.googleapis.com/iplanrio-opencode/install.ps1 -OutFile "$env:TEMP\oc-install.ps1"
-    & "$env:TEMP\oc-install.ps1" -VirtualKey '[sua-virtual-key]'
+    & ([scriptblock]::Create((irm 'https://storage.googleapis.com/iplanrio-opencode/install.ps1'))) -VirtualKey '[sua-virtual-key]'
     ```
 
     Instala o binário em `%LOCALAPPDATA%\Programs\opencode` e cria `%APPDATA%\opencode\config.json`.
