@@ -136,7 +136,7 @@ Crie ou edite o arquivo abaixo com sua Virtual Key:
     ```json
     {
       "$schema": "https://opencode.ai/config.json",
-      "model": "anthropic/claude-sonnet-4-6",
+      "model": "anthropic/claude-haiku-4-5",
       "provider": {
         "anthropic": {
           "name": "Bifrost IplanRio (Anthropic)",
@@ -145,7 +145,7 @@ Crie ou edite o arquivo abaixo com sua Virtual Key:
             "baseURL": "https://bifrost.iplan.dados.rio/anthropic/v1"
           },
           "models": {
-            "claude-sonnet-4-6": {
+            "claude-haiku-4-5": {
               "limit": {
                 "context": 200000,
                 "output": 64000
@@ -161,7 +161,7 @@ Crie ou edite o arquivo abaixo com sua Virtual Key:
     ```json
     {
       "$schema": "https://opencode.ai/config.json",
-      "model": "anthropic/claude-sonnet-4-6",
+      "model": "anthropic/claude-haiku-4-5",
       "provider": {
         "anthropic": {
           "name": "Bifrost IplanRio (Anthropic)",
@@ -170,7 +170,7 @@ Crie ou edite o arquivo abaixo com sua Virtual Key:
             "baseURL": "https://bifrost.iplan.dados.rio/anthropic/v1"
           },
           "models": {
-            "claude-sonnet-4-6": {
+            "claude-haiku-4-5": {
               "limit": {
                 "context": 200000,
                 "output": 64000
@@ -192,7 +192,7 @@ Crie ou edite o arquivo abaixo com sua Virtual Key:
     | API Key | `[sua-virtual-key]` |
     | Base URL | `https://bifrost.iplan.dados.rio/anthropic/v1` |
 
-    Defina o modelo padrão como `claude-sonnet-4-6`.
+    Defina o modelo padrão como `claude-haiku-4-5`.
   </Tab>
 </Tabs>
 
@@ -207,7 +207,7 @@ Abra o OpenCode e confirme com `/status`:
 ```
 > /status
 API Provider: Anthropic (Bifrost IplanRio)
-Model: claude-sonnet-4-6
+Model: claude-haiku-4-5
 ```
 
 ---
@@ -279,8 +279,8 @@ O Bifrost IplanRio dá acesso a múltiplos modelos. Escolha o modelo adequado à
 
 | Modelo | Quando usar |
 |--------|-------------|
-| `anthropic/claude-sonnet-4-6` | Padrão — desenvolvimento, revisão de código, refatorações complexas |
-| `anthropic/claude-haiku-4-5` | Tarefas simples: explicar funções, formatar código, perguntas rápidas |
+| `anthropic/claude-haiku-4-5` | **Padrão** — tarefas do dia a dia, explicar código, commits, perguntas rápidas |
+| `anthropic/claude-sonnet-4-6` | Features complexas, revisões profundas, refatorações grandes |
 | `bifrost-google/gemini-3.5-flash` | Alternativa rápida e econômica para tarefas de baixa complexidade |
 | `bifrost-google/gemini-3.1-pro-preview` | Raciocínio avançado, análise de arquiteturas complexas |
 | `bifrost-google/kimi-k2-thinking` | Problemas que exigem raciocínio profundo passo a passo |
@@ -296,12 +296,12 @@ Edite o campo `model` em `~/.config/opencode/config.json` (Linux/macOS) ou `%APP
 
 ```json
 {
-  "model": "anthropic/claude-haiku-4-5"
+  "model": "anthropic/claude-sonnet-4-6"
 }
 ```
 
 <Tip>
-Para tarefas do dia a dia que não exigem raciocínio complexo — explicar um trecho de código, gerar uma mensagem de commit, formatar JSON — use `claude-haiku-4-5` ou `gemini-3.5-flash`. Reserve o Sonnet para desenvolvimento de features e revisões profundas.
+O padrão `claude-haiku-4-5` cobre bem a maioria das tarefas. Mude para `claude-sonnet-4-6` quando precisar de raciocínio mais profundo — desenvolvimento de features complexas, revisões de arquitetura ou refatorações grandes.
 </Tip>
 
 ---
@@ -524,7 +524,7 @@ O Bifrost (`bifrost.iplan.dados.rio`) requer HTTPS na porta 443. Verifique sua c
 
 **Modelo errado aparecendo**
 
-Confirme que `"model": "anthropic/claude-sonnet-4-6"` está no nível raiz do `config.json`. Reexecute o script de instalação se necessário.
+Confirme que `"model": "anthropic/claude-haiku-4-5"` está no nível raiz do `config.json`. Reexecute o script de instalação se necessário.
 
 **Agente editando arquivos que não deveria**
 
