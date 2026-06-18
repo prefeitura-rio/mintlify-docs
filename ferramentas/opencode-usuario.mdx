@@ -29,6 +29,18 @@ Justificativa: [Para que você pretende usar]
 
 ---
 
+## Limites de Uso
+
+O acesso ao Bifrost é compartilhado e possui **limites diários de tokens por Virtual Key**. Ao atingir o limite, as requisições retornam erro até a renovação automática no dia seguinte.
+
+Se precisar de mais cota antes da renovação, solicite no canal **`#peça-permissão`** do Discord da IplanRio informando sua necessidade.
+
+<Warning>
+Use modelos mais leves para tarefas simples — isso preserva cota para quando você precisar de mais capacidade.
+</Warning>
+
+---
+
 ## Instalação Automática
 
 <Tabs>
@@ -49,8 +61,33 @@ Justificativa: [Para que você pretende usar]
 </Tabs>
 
 <Info>
-A Virtual Key é pessoal e intransferível. Se reexecutar o script com uma nova chave, a configuração é atualizada preservando outras configurações existentes.
+A Virtual Key é pessoal e intransferível. Re-executar o script atualiza providers e modelos preservando todas as outras configurações existentes.
 </Info>
+
+### Atualizar a configuração
+
+Re-execute o script a qualquer momento para aplicar novos providers ou modelos. A Virtual Key existente é reutilizada automaticamente — não é obrigatório passá-la novamente. Mesmo assim, passe-a explicitamente para evitar ambiguidades:
+
+<Tabs>
+  <Tab title="Linux / macOS / WSL">
+    ```bash
+    # Sem a chave — usa a chave já configurada
+    curl -fsSL https://storage.googleapis.com/iplanrio-opencode/install.sh | bash
+
+    # Recomendado: passe a chave explicitamente
+    curl -fsSL https://storage.googleapis.com/iplanrio-opencode/install.sh | bash -s -- [sua-virtual-key]
+    ```
+  </Tab>
+  <Tab title="Windows (PowerShell)">
+    ```powershell
+    # Sem a chave — usa a chave já configurada
+    & ([scriptblock]::Create((irm 'https://storage.googleapis.com/iplanrio-opencode/install.ps1')))
+
+    # Recomendado: passe a chave explicitamente
+    & ([scriptblock]::Create((irm 'https://storage.googleapis.com/iplanrio-opencode/install.ps1'))) -VirtualKey '[sua-virtual-key]'
+    ```
+  </Tab>
+</Tabs>
 
 ---
 
@@ -233,6 +270,39 @@ Para projetos onde você quer que o agente trabalhe com mais autonomia, sem conf
 <Warning>
 Use permissões abertas apenas em repositórios onde você tem controle total. Em repositórios compartilhados, prefira o modo padrão com confirmação a cada ação.
 </Warning>
+
+---
+
+## Modelos Disponíveis e Otimização de Custo
+
+O Bifrost IplanRio dá acesso a múltiplos modelos. Escolha o modelo adequado à tarefa para preservar sua cota diária.
+
+| Modelo | Quando usar |
+|--------|-------------|
+| `anthropic/claude-sonnet-4-6` | Padrão — desenvolvimento, revisão de código, refatorações complexas |
+| `anthropic/claude-haiku-4-5` | Tarefas simples: explicar funções, formatar código, perguntas rápidas |
+| `bifrost-google/gemini-3.5-flash` | Alternativa rápida e econômica para tarefas de baixa complexidade |
+| `bifrost-google/gemini-3.1-pro-preview` | Raciocínio avançado, análise de arquiteturas complexas |
+| `bifrost-google/kimi-k2-thinking` | Problemas que exigem raciocínio profundo passo a passo |
+| `bifrost-google/glm-5` | Alternativa de baixo custo para tarefas gerais |
+
+### Trocar o modelo na sessão
+
+Dentro do OpenCode, use o seletor de modelo para escolher sem editar o arquivo de configuração.
+
+### Definir um modelo padrão diferente
+
+Edite o campo `model` em `~/.config/opencode/config.json` (Linux/macOS) ou `%APPDATA%\opencode\config.json` (Windows):
+
+```json
+{
+  "model": "anthropic/claude-haiku-4-5"
+}
+```
+
+<Tip>
+Para tarefas do dia a dia que não exigem raciocínio complexo — explicar um trecho de código, gerar uma mensagem de commit, formatar JSON — use `claude-haiku-4-5` ou `gemini-3.5-flash`. Reserve o Sonnet para desenvolvimento de features e revisões profundas.
+</Tip>
 
 ---
 
