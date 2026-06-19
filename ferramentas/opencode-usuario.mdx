@@ -91,6 +91,62 @@ Re-execute o script a qualquer momento para aplicar novos providers ou modelos. 
 
 ---
 
+## Migrando do Claude Code
+
+Quem usou o **Claude Code** antes do OpenCode recebeu uma chave de service account do GCP e variáveis de ambiente apontando direto para o Google Vertex AI. A IplanRio removeu essas service accounts na migração para o Bifrost, e a chave órfã agora gera o erro:
+
+```
+invalid_grant: Invalid grant: account not found
+```
+
+O OpenCode usa apenas o `config.json` + Virtual Key. As variáveis antigas só atrapalham e precisam ser removidas.
+
+<Info>
+O script de instalação **remove essas variáveis automaticamente**, criando backup antes. Para resolver, basta reexecutá-lo. As instruções abaixo são para quem configurou manualmente ou prefere limpar à mão.
+</Info>
+
+### Variáveis a remover
+
+- `CLAUDE_CODE_USE_VERTEX`
+- `ANTHROPIC_VERTEX_PROJECT_ID`
+- `ANTHROPIC_VERTEX_REGION`
+- `GOOGLE_APPLICATION_CREDENTIALS`
+- `GOOGLE_CLOUD_PROJECT` e `GOOGLE_CLOUD_LOCATION` (quando setadas para o Claude Code)
+
+### Limpeza manual
+
+<Tabs>
+  <Tab title="Linux / macOS / WSL">
+    Remova ou comente as linhas `export` acima no seu profile (`~/.zshrc`, `~/.bashrc` ou equivalente), depois recarregue o shell:
+
+    ```bash
+    # Desativar na sessão atual
+    unset CLAUDE_CODE_USE_VERTEX ANTHROPIC_VERTEX_PROJECT_ID ANTHROPIC_VERTEX_REGION \
+          GOOGLE_APPLICATION_CREDENTIALS GOOGLE_CLOUD_PROJECT GOOGLE_CLOUD_LOCATION \
+          GCP_PROJECT GCLOUD_PROJECT
+
+    # Recarregar o profile
+    source ~/.zshrc   # ou ~/.bashrc
+    ```
+  </Tab>
+  <Tab title="Windows (PowerShell)">
+    ```powershell
+    foreach ($v in 'CLAUDE_CODE_USE_VERTEX','ANTHROPIC_VERTEX_PROJECT_ID','ANTHROPIC_VERTEX_REGION','GOOGLE_APPLICATION_CREDENTIALS','GOOGLE_CLOUD_PROJECT','GOOGLE_CLOUD_LOCATION','GCP_PROJECT','GCLOUD_PROJECT') {
+        [Environment]::SetEnvironmentVariable($v, $null, 'User')
+        Remove-Item "Env:$v" -ErrorAction SilentlyContinue
+    }
+    ```
+
+    Reabra o terminal em seguida.
+  </Tab>
+</Tabs>
+
+<Warning>
+O Claude Code não faz mais parte do fluxo da IplanRio — use o **OpenCode**. Se você rodava `claude` por hábito, passe a rodar `opencode`.
+</Warning>
+
+---
+
 ## Configuração Manual
 
 Para quem prefere configurar manualmente, usa o **OpenCode Desktop**, ou quer adicionar o Bifrost a uma instalação existente.
@@ -195,6 +251,43 @@ Crie ou edite o arquivo abaixo com sua Virtual Key:
     Defina o modelo padrão como `claude-haiku-4-5`.
   </Tab>
 </Tabs>
+
+O exemplo acima habilita apenas o Claude. Para os demais modelos (Gemini, Kimi, GLM), adicione o provider `bifrost-google` ao mesmo `config.json`. O script de instalação escreve este bloco automaticamente.
+
+<Accordion title="Adicionar Gemini, Kimi e GLM (provider bifrost-google)">
+```json
+{
+  "provider": {
+    "bifrost-google": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Bifrost (Google)",
+      "options": {
+        "apiKey": "[sua-virtual-key]",
+        "baseURL": "https://bifrost.iplan.dados.rio/openai/v1"
+      },
+      "models": {
+        "gemini-3.5-flash": {
+          "id": "vertex/gemini-3.5-flash",
+          "limit": { "context": 200000, "output": 64000 }
+        },
+        "gemini-3.1-pro-preview": {
+          "id": "vertex/gemini-3.1-pro-preview",
+          "limit": { "context": 200000, "output": 64000 }
+        },
+        "kimi-k2-thinking": {
+          "id": "vertex/moonshotai/kimi-k2-thinking-maas",
+          "limit": { "context": 256000, "output": 64000 }
+        },
+        "glm-5": {
+          "id": "vertex/zai-org/glm-5-maas",
+          "limit": { "context": 200000, "output": 64000 }
+        }
+      }
+    }
+  }
+}
+```
+</Accordion>
 
 ### Verificar
 
@@ -496,14 +589,18 @@ opencode -p "Escreva script Python que migra ergon.servidores para o formato RMI
 
 ## Recursos
 
-- [Melhores práticas (documentação oficial)](https://www.anthropic.com/engineering/claude-code-best-practices)
-- [Curso — Claude Code como agente de código (2h)](https://learn.deeplearning.ai/courses/claude-code-a-highly-agentic-coding-assistant/lesson/kkth2/setup-%26-codebase-understanding)
+- [Documentação oficial do OpenCode](https://opencode.ai/docs)
 - [Repositório OpenCode](https://github.com/anomalyco/opencode)
 - [Releases e changelogs](https://github.com/anomalyco/opencode/releases)
+- [Boas práticas de agentes de código](https://www.anthropic.com/engineering/claude-code-best-practices) — material conceitual, válido para qualquer agente de código
 
 ---
 
 ## Troubleshooting
+
+**`invalid_grant: Invalid grant: account not found`**
+
+Variáveis de ambiente do antigo setup Claude Code + Vertex AI continuam ativas no seu shell. Reexecute o script de instalação — ele remove essas variáveis automaticamente, com backup — ou siga a [limpeza manual](#migrando-do-claude-code).
 
 **`opencode: command not found` após instalação no Linux**
 

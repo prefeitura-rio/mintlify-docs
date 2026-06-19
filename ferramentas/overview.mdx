@@ -25,16 +25,25 @@ Não é necessário gerenciar credenciais de cloud ou chaves de API diretamente:
 Você  →  solicita no Discord (#peça-permissão)
        →  recebe Virtual Key por email
        →  roda o script de instalação
-       →  usa o OpenCode com Claude via Bifrost
+       →  usa o OpenCode com múltiplos modelos via Bifrost
 ```
 
 O **Bifrost** é o proxy centralizado de IA da IplanRio. Ele autentica as requisições, controla o acesso por Virtual Key e faz o roteamento para o modelo correto no Google Vertex AI — sem que você precise configurar nada de GCP.
 
-## Modelo Disponível
+## Modelos Disponíveis
 
-| Modelo | Provider | Uso recomendado |
-|--------|----------|-----------------|
-| Claude Sonnet 4.6 | Anthropic via Vertex AI | Desenvolvimento, revisão de código, análise de dados |
+O Bifrost dá acesso a múltiplos modelos. Escolha o adequado à tarefa para preservar sua cota diária.
+
+| Modelo | Uso recomendado |
+|--------|-----------------|
+| `anthropic/claude-haiku-4-5` | Padrão — tarefas do dia a dia, explicar código, commits |
+| `anthropic/claude-sonnet-4-6` | Features complexas, revisões profundas, refatorações |
+| `bifrost-google/gemini-3.5-flash` | Alternativa rápida e econômica |
+| `bifrost-google/gemini-3.1-pro-preview` | Raciocínio avançado, arquiteturas complexas |
+| `bifrost-google/kimi-k2-thinking` | Raciocínio profundo passo a passo |
+| `bifrost-google/glm-5` | Alternativa de baixo custo para tarefas gerais |
+
+Detalhes e otimização de custo no [guia do OpenCode](/ferramentas/opencode-usuario#modelos-disponíveis-e-otimização-de-custo).
 
 ## Solicitar Acesso
 
