@@ -596,6 +596,35 @@ opencode -p "Escreva script Python que migra ergon.servidores para o formato RMI
 
 ---
 
+## Diagnóstico Automático
+
+Se algo não estiver funcionando, rode o script de diagnóstico. Ele usa um **modelo gratuito** do OpenCode — não precisa de Virtual Key configurada — e verifica, identifica e corrige os problemas sozinho.
+
+<Tabs>
+  <Tab title="Linux / macOS / WSL">
+    ```bash
+    curl -fsSL https://storage.googleapis.com/iplanrio-opencode/doctor.sh | bash
+    ```
+  </Tab>
+  <Tab title="Windows (PowerShell)">
+    ```powershell
+    & ([scriptblock]::Create((irm 'https://storage.googleapis.com/iplanrio-opencode/doctor.ps1')))
+    ```
+  </Tab>
+</Tabs>
+
+O agente verifica e corrige automaticamente:
+
+- Binário `opencode` no PATH
+- `config.json` — model, providers Anthropic e Google, estrutura de modelos
+- `opencode.json` — `small_model`
+- Conectividade com o Bifrost
+- Presença e validade da Virtual Key
+
+Se a Virtual Key estiver ausente ou inválida, o agente instrui a solicitá-la no canal **`#peça-permissão`** do Discord da IplanRio.
+
+---
+
 ## Troubleshooting
 
 **`invalid_grant: Invalid grant: account not found`**
