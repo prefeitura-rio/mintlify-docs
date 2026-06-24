@@ -9,11 +9,22 @@ Este guia explica como criar e configurar pipelines de dados usando Prefect 3 na
 
 ## ✅ Pré-requisitos
 
+### Acessos e Permissões
+- Acesso ao Tailscale para conexão à rede interna da Prefeitura
+- Permissão para acessar o Infisical (gerenciador de secrets)
 - Acesso de leitura ao projeto BigQuery `rj-iplanrio`
 - Permissões de colaborador no repositório GitHub
+
+<Note>
+  Caso não tenha acesso ao GitHub, BigQuery ou Infisical, solicite permissões no canal **#peça-permissão** do [Discord da IplanRio](https://discord.gg/Scr8HhzRuH).
+</Note>
+
+### Ambiente de Desenvolvimento
+- Python 3.13+
+- `uv` package manager
+- Editor de código ([VSCode](https://code.visualstudio.com/) recomendado)
+- [WSL 2](https://learn.microsoft.com/pt-br/windows/wsl/install) (usuários Windows)
 - Conhecimento básico de Git e GitHub
-- Python 3.8+ instalado
-- `uv` package manager instalado
 
 ## 🔧 Configuração Inicial
 
@@ -23,6 +34,53 @@ Este guia explica como criar e configurar pipelines de dados usando Prefect 3 na
 git clone https://github.com/prefeitura-rio/prefect_rj_iplanrio.git
 cd prefect_rj_iplanrio
 ```
+
+### 2. Instalar Nix
+
+O repositório utiliza Nix para gerenciar o ambiente de desenvolvimento.
+
+```bash
+curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | sh -s -- --daemon
+```
+
+Verifique a instalação:
+
+```bash
+which nix
+```
+
+### 3. Configurar direnv
+
+O `direnv` gerencia automaticamente variáveis de ambiente do repositório.
+
+```bash
+curl -sfL https://direnv.net/install.sh | bash
+```
+
+Adicione o hook ao seu shell:
+
+```bash
+# Para Bash
+eval "$(direnv hook bash)"
+
+# Para Zsh, Oh My Zsh e outros shells, consulte: https://direnv.net/docs/hook.html
+```
+
+### 4. Instalar dependências
+
+```bash
+uv sync
+```
+
+### 5. Configurar pre-commit hooks
+
+```bash
+uv run pre-commit install --install-hooks
+```
+
+<Tip>
+  Pre-commit hooks garantem qualidade do código antes do commit. Veja mais em [pre-commit.com](https://pre-commit.com/).
+</Tip>
 
 ## 🚀 Boas Práticas de Desenvolvimento
 
@@ -58,19 +116,15 @@ def extracao_de_dados():
 
 ## 🧪 Criação de Nova Pipeline
 
-### 1. Usar Template Cookiecutter
+### 1. Gerar Template com Cookiecutter
 
-O repositório utiliza cookiecutter para facilitar a criação de novas pipelines de forma padronizada. Os templates disponíveis em `templates/` permitem gerar rapidamente a estrutura de diretórios e arquivos necessários para uma nova pipeline Prefect, incluindo Dockerfile, flow.py, prefect.yaml e pyproject.toml.
-
-Para criar uma nova pipeline, instale `uv` e rode:
+O repositório usa cookiecutter para criar pipelines padronizadas com Dockerfile, flow.py, prefect.yaml e pyproject.toml.
 
 ```bash
 uvx cookiecutter templates --output-dir=pipelines
 ```
 
-Você será solicitado a informar valores como secretaria e pipeline, que serão utilizados para preencher os nomes dos diretórios, arquivos e variáveis nos templates. O template gerado já segue o padrão de nomenclatura definido anteriormente.
-
-**Exemplo de interação:**
+O comando solicitará informações sobre secretaria e pipeline:
 
 ```bash
 $ uvx cookiecutter templates --output-dir=pipelines
@@ -78,47 +132,53 @@ secretaria [sms]: sms
 pipeline [dados_pacientes]: dados_saude_sms
 ```
 
+<Tip>
+  Use nomes descritivos que identifiquem a secretaria e o tipo de dados. Exemplo: `censo_escolar` (SME), `pacientes_upa` (SMS), `multas_transito` (SMTR).
+</Tip>
+
 ### 2. Configurar flow.py
 
-Após gerar o template, substitua os valores padrão no arquivo `flow.py` pelos valores específicos da sua pipeline:
-
-<Warning>
-  **IMPORTANTE**: É necessário solicitar à equipe de desenvolvimento da IplanRio para adicionar o usuário e senha do seu banco de origem no Infisical no caminho especificado em `infisical_secret_path`. 
-  Sem essas credenciais configuradas, sua pipeline não conseguirá se conectar ao banco de dados.
-</Warning>
+Edite `flow.py` com as configurações específicas da sua pipeline:
 
 ```python
-# Exemplo de configuração em flow.py
+# Exemplo: Pipeline de dados de pacientes SMS
 @flow(log_prints=True)
-def pipeline_dados_saude_sms():
+def rj_sms__dados_pacientes_upa():
     # Configurações da base de dados
-    db_database = "banco1"  # Nome do Banco de Origem
-    db_host = "10.15.255.1"  # Host do Banco de Origem
-    db_port = 3306  # Porta do Banco de Origem
-    db_type = "mysql"  # Tipo do Banco de Origem
+    db_database = "saude_producao"
+    db_host = "10.20.30.40"
+    db_port = 3306
+    db_type = "mysql"
     
-    # Configurações do dataset
-    dataset_id = "nome_do_dataset"  # Dataset de destino em rj-iplanrio
+    # Dataset de destino no BigQuery
+    dataset_id = "saude_sms"
     
-    # Configurações do Infisical
-    infisical_secret_path = "/db-seu-banco-de-origem"  # Caminho dos secrets
-    
+    # Caminho dos secrets no Infisical
+    infisical_secret_path = "/db-saude-sms"
 ```
 
-**Parâmetros importantes:**
+<Warning>
+  **Credenciais Obrigatórias**: Solicite ao IplanRio para adicionar usuário e senha do banco de origem no Infisical no caminho especificado em `infisical_secret_path`. Sem essas credenciais, a pipeline não conseguirá se conectar ao banco de dados.
+</Warning>
 
-- `db_database`: Nome do banco de dados de origem (ex: `banco1`)
-- `db_host`: Host do banco de dados de origem (ex: `10.15.255.1`)
-- `db_port`: Porta de conexão do banco de dados de origem (ex: `3306`)
-- `db_type`: Tipo do banco de dados de origem (ex: `mysql`, `postgres`, etc)
-- `dataset_id`: Dataset de destino no BigQuery (todas as extrações são adicionadas ao projeto `rj-iplanrio`)
-- `infisical_secret_path`: Caminho dos secrets no Infisical
+**Parâmetros de Configuração:**
+
+| Parâmetro | Descrição | Exemplo |
+|-----------|-----------|---------|
+| `db_database` | Nome do banco de dados de origem | `banco1` |
+| `db_host` | Host do banco de dados de origem | `10.15.255.1` |
+| `db_port` | Porta de conexão | `3306` |
+| `db_type` | Tipo do banco de dados | `mysql`, `postgres` |
+| `dataset_id` | Dataset de destino no BigQuery (projeto `rj-iplanrio`) | `saude_sms` |
+| `infisical_secret_path` | Caminho dos secrets no Infisical | `/db-saude-sms` |
 
 ### 3. Configurar prefect.yaml
 
 Configure os schedules no arquivo `prefect.yaml` conforme suas necessidades:
 
 #### Schedule Overwrite
+
+Schedule overwrite substitui todos os dados da tabela a cada execução. Use para dados que devem refletir sempre o estado atual completo.
 
 ```yaml
 schedules:
@@ -138,7 +198,13 @@ schedules:
         FROM banco1.saude
 ```
 
-#### Schedule Incremental (Incremental)
+<Tip>
+  Use overwrite para tabelas dimensão ou cadastros que precisam refletir o estado atual completo, sem dados históricos.
+</Tip>
+
+#### Schedule Incremental
+
+Schedule incremental adiciona apenas dados novos ou atualizados. Use para tabelas fato ou registros transacionais com alto volume.
 
 ```yaml
 schedules:
@@ -165,124 +231,136 @@ schedules:
         FROM banco1.saude
 ```
 
-**Explicação dos parâmetros:**
+<Tip>
+  Use incremental para dados que crescem continuamente (transações, eventos, logs). O particionamento otimiza queries e reduz custos no BigQuery.
+</Tip>
 
-- `interval`: Intervalo entre as runs em segundos (86400 = 24 horas)
-- `anchor_date`: Data de início do schedule em UTC
-- `timezone`: Fuso horário (America/Sao_Paulo)
-- `slug`: Identificador único do schedule
-- `table_id`: Nome da tabela no BigQuery
-- `dump_mode`: Modo de inserção (`append` para incremental, `overwrite` para substituição)
-- `partition_columns`: Coluna(s) para particionamento
-- `partition_date_format`: Formato da data de particionamento
-- `break_query_frequency`: Frequência de particionamento (`day`, `month`, `year`)
-- `break_query_start/end`: Período de dados a serem processados
+**Parâmetros de Schedule:**
+
+| Parâmetro | Descrição | Valores |
+|-----------|-----------|---------|
+| `interval` | Intervalo entre execuções em segundos | `86400` (24h) |
+| `anchor_date` | Data de início do schedule em UTC | `2022-01-01T01:00:00` |
+| `timezone` | Fuso horário | `America/Sao_Paulo` |
+| `slug` | Identificador único do schedule | `dados_saude_sms_diario` |
+| `table_id` | Nome da tabela no BigQuery | `pacientes_sms` |
+| `dump_mode` | Modo de inserção | `append`, `overwrite` |
+| `partition_columns` | Coluna(s) para particionamento | `data_atualizacao` |
+| `partition_date_format` | Formato da data de particionamento | `%Y-%m-%d` |
+| `break_query_frequency` | Frequência de particionamento | `day`, `month`, `year` |
+| `break_query_start/end` | Período de processamento | `current_day` |
 
 ### 4. Commit e Push
 
 ```bash
-# 1. Adicionar arquivos
+# Adicionar arquivos
 git add pipelines/sua_secretaria/sua_pipeline/
 
-# 2. Commit com mensagem descritiva
+# Commit com mensagem descritiva
 git commit -m "feat: adiciona pipeline de dados de saúde SMS
 
 - Cria pipeline para extração de dados SMS
 - Configura schedule diário incremental
 - Adiciona particionamento por data"
 
-# 3. Push para branch
+# Push para branch
 git push origin staging/sua-pipeline
 ```
 
-### 5. Pull Request
+<Tip>
+  Use [Conventional Commits](https://www.conventionalcommits.org/) para mensagens padronizadas: `feat:`, `fix:`, `docs:`, `refactor:`.
+</Tip>
 
-1. **Criar PR** no GitHub
-2. **Descrição**: Explicar mudanças e impacto
-3. **Review**: Solicitar revisão da equipe IplanRio
-4. **Testes**: Garantir que todos os testes passem
-5. **Teste em Staging**: Após o deploy em staging funcionar, você já pode testar sua pipeline no ambiente de desenvolvimento
-6. **Merge**: Após aprovação, merge para `main`
+### 5. Criar Pull Request
+
+1. **Criar PR** no GitHub para a branch `staging/sua-pipeline`
+2. **Descrever mudanças**: Explique o objetivo da pipeline e impacto no projeto
+3. **Solicitar review** da equipe IplanRio
+4. **Aguardar CI/CD**: Todos os testes devem passar
+5. **Testar em Staging**: Valide a pipeline no ambiente de desenvolvimento após deploy
+6. **Merge**: Após aprovação, faça merge para `main`
 
 #### Workflow de CI/CD Automático
 
-O repositório utiliza GitHub Actions para automatizar todo o ciclo de vida das pipelines, incluindo build, deploy e publicação de imagens Docker:
+O repositório utiliza GitHub Actions para automatizar build, deploy e publicação de pipelines.
 
-**🚀 Deploy Automático dos Flows:**
+**🚀 Deploy Automático**
 
-O sistema possui dois workflows principais para deploy automático:
+O sistema possui workflows separados para staging e produção:
 
-- **`.github/workflows/deploy-prefect-flows-staging.yaml`** - Ambiente de Staging
-  - Acionado a cada push em branches `staging/*`
-  - Pode ser executado manualmente
-  - Monitora alterações em `pipelines/**`
+| Ambiente | Workflow | Trigger | Monitora |
+|----------|----------|---------|----------|
+| Staging | `deploy-prefect-flows-staging.yaml` | Push em `staging/*` | `pipelines/**` |
+| Produção | `deploy-prefect-flows-prod.yaml` | Push em `master` | `pipelines/**` |
 
-- **`.github/workflows/deploy-prefect-flows-prod.yaml`** - Ambiente de Produção
-  - Acionado a cada push na branch `master`
-  - Pode ser executado manualmente
-  - Monitora alterações em `pipelines/**`
+**🔧 Processo de Deploy**
 
-**🔧 Processo de Deploy:**
+Ambos os workflows executam:
 
-Ambos os workflows executam as seguintes etapas:
+1. Checkout do código-fonte
+2. Login no GitHub Container Registry (ghcr.io)
+3. Instalação de dependências Python com `uv`
+4. Execução do script `.github/scripts/deploy_prefect_flows.py`
+   - Deploy automático de todos os flows em `pipelines/*/prefect.yaml`
+   - Falhas interrompem o workflow e registram erro nos logs
 
-1. **Checkout do código-fonte**
-2. **Login no GitHub Container Registry** (ghcr.io)
-3. **Instalação das dependências Python** com `uv`
-4. **Execução do script de deploy** `.github/scripts/deploy_prefect_flows.py`
-   - Faz o deploy automático de todos os flows definidos em `pipelines/*/prefect.yaml`
-   - Caso algum deploy falhe, o workflow é interrompido e o erro é registrado nos logs
+**🐳 Build da Imagem Base**
 
-**🐳 Build e Publicação da Imagem Base:**
+Workflow `build-and-push-root-dockerfile.yaml`:
 
-O workflow `.github/workflows/build-and-push-root-dockerfile.yaml`:
-
-- **Acionado**: Em alterações no Dockerfile da raiz ou push na branch master
-- **Execução manual**: Disponível quando necessário
-- **Processo**:
-  - Build da imagem Docker definida no Dockerfile do repositório
-  - Publicação da imagem no GitHub Container Registry (`ghcr.io/${{ github.repository }}:latest`)
+- **Trigger**: Alterações no Dockerfile raiz ou push em `master`
+- **Processo**: Build e publicação em `ghcr.io/${{ github.repository }}:latest`
 
 <Note>
-  O workflow de staging permite testar suas pipelines em um ambiente isolado antes do deploy em produção. 
-  Após o deploy em staging funcionar, você já pode testar sua pipeline no ambiente de desenvolvimento.
-  Apenas após o merge na branch master é que as pipelines são deployadas em produção.
+  Staging permite testar pipelines antes de produção. Após deploy em staging funcionar, teste no ambiente de desenvolvimento. Apenas após merge em `master` as pipelines são deployadas em produção.
 </Note>
 
 <Warning>
-  **IMPORTANTE**: Se algum deploy falhar durante o processo, o workflow será interrompido e você precisará corrigir os problemas antes de tentar novamente.
+  Se algum deploy falhar, o workflow será interrompido. Corrija os problemas antes de tentar novamente.
 </Warning>
 
-**📊 Monitoramento do CI/CD:**
+**📊 Monitoramento**
 
-- Acompanhe o progresso dos deploys na aba "Actions" do seu repositório
-- Verifique os logs para identificar possíveis erros
-- Aguarde a conclusão bem-sucedida antes de solicitar review da equipe
-- Se houver falhas, corrija os problemas e faça novo commit - o CI será executado novamente
+- Acompanhe progresso na aba **Actions** do GitHub
+- Verifique logs para identificar erros
+- Aguarde conclusão antes de solicitar review
+- Falhas requerem novo commit para re-executar CI/CD
 
 ## 🔧 Troubleshooting
 
-### Problemas Comuns
+### Qual work-pool utilizar:
 
-**Erro de conexão com banco de dados:**
-- Verifique se as credenciais estão corretas no Infisical
-- Confirme se o host e porta estão acessíveis
-- Teste a conexão manualmente
+A escolha do **work-pool** depende de onde a pipeline será executada e dos recursos que ela precisa acessar.
 
-**Falha no deploy:**
-- Verifique os logs na aba "Actions" do GitHub
-- Confirme se todos os arquivos necessários foram commitados
-- Valide a sintaxe do `prefect.yaml`
+| Work-pool | Quando utilizar |
+|-----------|-----------------|
+| **default-pool** | Utilize sempre que a pipeline **não precisar acessar recursos internos da Iplanrio** e **não pertencer ao projeto Táxi.Rio**. |
+| **k3s-pool** | Pool padrão para a maioria das pipelines. Utilize para pipelines que precisam acessar recursos internos da **Iplanrio**, como bancos de dados, APIs, serviços ou outros recursos disponíveis apenas na infraestrutura interna. |
+| **taxirio-pool** | Utilize exclusivamente para pipelines do projeto **Táxi.Rio**. |
 
-**Pipeline não executa no schedule:**
-- Verifique se o `anchor_date` está no passado
-- Confirme se o `timezone` está correto
-- Valide se o `interval` está em segundos
+### Erro de Conexão com Banco de Dados:
 
-**Dados não aparecem no BigQuery:**
-- Verifique se o `dataset_id` está correto
-- Confirme se a query está retornando dados
-- Valide as permissões de escrita no projeto `rj-iplanrio`
+- Verifique credenciais no Infisical no caminho `infisical_secret_path`
+- Confirme acesso ao host e porta via Tailscale
+- Teste conexão manualmente com ferramenta como `mysql-client` ou `psql`
+
+### Falha no Deploy:
+
+- Verifique logs na aba **Actions** do GitHub
+- Confirme que todos os arquivos foram commitados (`flow.py`, `prefect.yaml`, `Dockerfile`)
+- Valide sintaxe YAML em [yamllint.com](https://www.yamllint.com/)
+
+### Pipeline Não Executa no Schedule:
+
+- Verifique se `anchor_date` está no passado (não no futuro)
+- Confirme `timezone: America/Sao_Paulo`
+- Valide `interval` em segundos (86400 = 24 horas)
+
+### Dados Não Aparecem no BigQuery:
+
+- Confirme `dataset_id` correto no projeto `rj-iplanrio`
+- Verifique se a query retorna dados executando-a manualmente
+- Valide permissões de escrita no BigQuery (solicite ao IplanRio se necessário)
 
 ## 📚 Recursos Adicionais
 
