@@ -328,22 +328,36 @@ Workflow `build-and-push-root-dockerfile.yaml`:
 
 ## 🔧 Troubleshooting
 
-### Erro de Conexão com Banco de Dados
+### Qual work-pool utilizar:
+
+A escolha do **work-pool** depende de onde a pipeline será executada e dos recursos que ela precisa acessar.
+
+| Work-pool | Quando utilizar |
+|-----------|-----------------|
+| **default-pool** | Utilize sempre que a pipeline **não precisar acessar recursos internos da Iplanrio** e **não pertencer ao projeto Táxi.Rio**. |
+| **k3s-pool** | Pool padrão para a maioria das pipelines. Utilize para pipelines que precisam acessar recursos internos da **Iplanrio**, como bancos de dados, APIs, serviços ou outros recursos disponíveis apenas na infraestrutura interna. |
+| **taxirio-pool** | Utilize exclusivamente para pipelines do projeto **Táxi.Rio**. |
+
+### Erro de Conexão com Banco de Dados:
+
 - Verifique credenciais no Infisical no caminho `infisical_secret_path`
 - Confirme acesso ao host e porta via Tailscale
 - Teste conexão manualmente com ferramenta como `mysql-client` ou `psql`
 
-### Falha no Deploy
+### Falha no Deploy:
+
 - Verifique logs na aba **Actions** do GitHub
 - Confirme que todos os arquivos foram commitados (`flow.py`, `prefect.yaml`, `Dockerfile`)
 - Valide sintaxe YAML em [yamllint.com](https://www.yamllint.com/)
 
-### Pipeline Não Executa no Schedule
+### Pipeline Não Executa no Schedule:
+
 - Verifique se `anchor_date` está no passado (não no futuro)
 - Confirme `timezone: America/Sao_Paulo`
 - Valide `interval` em segundos (86400 = 24 horas)
 
-### Dados Não Aparecem no BigQuery
+### Dados Não Aparecem no BigQuery:
+
 - Confirme `dataset_id` correto no projeto `rj-iplanrio`
 - Verifique se a query retorna dados executando-a manualmente
 - Valide permissões de escrita no BigQuery (solicite ao IplanRio se necessário)
