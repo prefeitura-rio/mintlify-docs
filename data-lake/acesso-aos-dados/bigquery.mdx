@@ -1,0 +1,205 @@
+---
+title: BigQuery
+description: Acesso aos dados do Data Lake através do BigQuery
+icon: "database"
+---
+
+Expore dados do Data Lake municipal através do Google BigQuery, a plataforma de data warehouse utilizada pela Prefeitura do Rio para centralizar dados de SMS, SME, SMTR e outras secretarias.
+
+## Pré-requisitos
+
+- Conta Google com acesso ao projeto BigQuery da Prefeitura
+- Permissões de acesso ao projeto específico
+- Familiaridade com SQL básico (opcional, mas recomendado)
+
+## Acessando um Projeto no BigQuery
+
+### Passo 1: Acessar o BigQuery Console
+
+1. Acesse [console.cloud.google.com/bigquery](https://console.cloud.google.com/bigquery)
+2. Faça login com sua conta Google corporativa
+3. O console do BigQuery abrirá automaticamente
+
+### Passo 2: Buscar Projeto por Nome
+
+Na barra lateral esquerda, você verá a seção **Projetos do Explorer**. Para localizar seu projeto:
+
+1. Clique no ícone **Pesquisar** na barra lateral (ou use `Ctrl+K` / `Cmd+K`)
+2. Digite o nome do projeto (exemplo: `rj-sms`)
+3. Selecione o projeto na lista de resultados
+
+Alternativamente, clique em **Selecionar um projeto** no topo da tela para escolher entre projetos disponíveis.
+
+### Passo 3: Explorar Datasets e Tabelas
+
+Após acessar o projeto:
+
+1. Expanda a árvore de **Datasets** na barra lateral
+2. Clique em um dataset para visualizar suas tabelas (exemplo: `saude` da SMS)
+3. Clique em uma tabela para ver seu schema, pré-visualizar dados e informações de tamanho
+
+### Passo 4: Favoritar um Projeto
+
+Para acesso rápido ao projeto:
+
+1. Localize o projeto na seção **Projetos do Explorer**
+2. Clique no ícone de **estrela** (⭐) ao lado do nome do projeto
+3. O projeto aparecerá na seção **Projetos favoritos** no topo da barra lateral
+
+Para favoritar um dataset específico:
+
+1. Clique com botão direito no dataset → **Favoritar**
+2. Ou clique no ícone de estrela ao lado do nome do dataset
+
+## Escrevendo Queries
+
+1. Clique em **+ Criar** no topo da barra lateral
+2. Selecione **Query SQL**
+3. Escolha o projeto padrão (ou especifique na query com `projeto.dataset.tabela`)
+
+
+## Melhores Práticas
+
+### Otimizar Custos
+
+- **Usar colunas específicas**: Evite `SELECT *`. Selecione apenas colunas necessárias
+- **Aplicar filtros cedo**: Use `WHERE` para filtrar dados antes de agregações
+- **Particionar por data**: Tabelas particionadas reduzem custos. Sempre filtre por `data_particion` ou coluna similar
+- **Preview antes de executar**: Use `LIMIT` para validar queries antes de processar dados inteiros
+
+Exemplo otimizado:
+
+```sql
+-- ✅ BOM: Colunas específicas, filtro de data, limite
+SELECT
+    id_paciente,
+    data_atendimento,
+    tipo_atendimento
+FROM `rj-sms.saude.atendimentos`
+WHERE
+    data_atendimento >= '2024-01-01'
+LIMIT 1000;
+
+-- ❌ EVITAR: SELECT *, sem filtros, sem limite
+SELECT *
+FROM `rj-sms.saude.atendimentos`;
+```
+
+### Melhorar Performance
+
+- **Usar Common Table Expressions (CTEs)**: Organizam queries complexas
+- **Junções eficientes**: Mantenha tabelas menores no lado direito de `LEFT JOIN`
+- **Evitar subqueries em SELECT**: Use JOINs ou CTEs
+- **Verificar planos de execução**: Clique em "Explicar" para identificar etapas custosas
+
+```sql
+-- ✅ BOM: CTE com lógica clara
+WITH atendimentos_recentes AS (
+    SELECT
+        id_paciente,
+        data_atendimento,
+        tipo_atendimento
+    FROM `rj-sms.saude.atendimentos`
+    WHERE
+        data_atendimento >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+)
+SELECT
+    id_paciente,
+    COUNT(*) as total_atendimentos,
+    MAX(data_atendimento) as ultimo_atendimento
+FROM atendimentos_recentes
+GROUP BY
+    id_paciente;
+```
+
+### Conformidade e Segurança
+
+- **Respeitar LGPD**: Não exporte dados sensíveis desnecessariamente
+- **Usar máscaras de dados**: Para PII (Personally Identifiable Information), use funções de hash
+- **Auditar acessos**: IplanRio monitora acessos ao Data Lake
+- **Documentar transformações**: Comente queries complexas para facilitar revisão
+
+```sql
+-- ✅ Exemplo com hash de dados sensíveis
+SELECT
+    SHA256(cpf) as cpf_hash,
+    data_atendimento,
+    tipo_atendimento
+FROM `rj-sms.saude.atendimentos`;
+```
+
+### Padrões de Codificação
+
+- **Nomes descritivos**: Use nomes de colunas e variáveis que indicam propósito
+- **Formatação consistente**: Indente CTEs e cláusulas para clareza
+- **Comentários úteis**: Explique lógica não óbvia, especialmente em transformações
+- **Evitar óbvios**: CTEs ou funções desnecessárias aumentam complexidade
+
+```sql
+-- ✅ Bem formatado e documentado
+WITH dados_saude_filtrados AS (
+    -- Recupera atendimentos dos últimos 30 dias de clínicas ativas
+    SELECT
+        id_paciente,
+        data_atendimento,
+        unidade_saude,
+        tipo_atendimento
+    FROM `rj-sms.saude.atendimentos`
+    WHERE
+        data_atendimento >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+        AND unidade_saude IN (SELECT id_unidade FROM `rj-sms.saude.unidades` WHERE ativa = TRUE)
+)
+SELECT
+    unidade_saude,
+    COUNT(DISTINCT id_paciente) as pacientes_unicos,
+    AVG(EXTRACT(HOUR FROM data_atendimento)) as hora_media_atendimento
+FROM dados_saude_filtrados
+GROUP BY
+    unidade_saude
+ORDER BY
+    pacientes_unicos DESC;
+```
+
+### Dicas para Análises Municipais
+
+- **Entender estrutura de secretarias**: Datasets são organizados por secretaria (saude, education, transportation)
+- **Usar dimensões apropriadas**: Tabelas `dim_*` contêm informações de referência (unidades, escolas, etc.)
+- **Verificar versionamento**: Tabelas podem ter múltiplas versões; use `_v1`, `_v2` para diferenciar
+- **Solicitar acesso**: Se tabela não aparecer, solicite acesso a IplanRio
+
+## Troubleshooting
+
+### Query retorna erro de permissão
+
+- Verifique se você tem acesso ao projeto no IAM
+- Confirme com seu gestor se a secretaria tem permissão para acessar o dataset
+- Contate IplanRio para solicitar acesso adicional
+
+### Tabela não encontrada
+
+- Valide o nome completo: `projeto.dataset.tabela`
+- Verifique se a tabela está sob a aba correta (pode estar em dataset diferente)
+- Use a busca do Explorer para localizar a tabela correta
+
+### Query muito lenta
+
+- Adicione filtros de data (use partições)
+- Reduza número de linhas com `LIMIT` para testes
+- Clique em "Explicar" para ver plano de execução
+- Evite `SELECT *` e subqueries aninhadas
+
+### Custos crescendo
+
+- Revise histórico de queries no "Job history"
+- Identifique queries que processam muitos dados
+- Use tabelas particionadas e filtros de data
+- Considere usar [_cached queries_](https://docs.cloud.google.com/bigquery/docs/cached-results?hl=pt-br) quando possível
+
+## Próximos Passos
+
+- Explore datasets disponíveis conforme sua secretaria
+- Crie dashboards com Data Studio conectado ao BigQuery
+- Compartilhe insights com equipes municipais
+- Solicite novas tabelas a IplanRio conforme necessidades surgem
+
+Para dúvidas ou acesso adicional, contate IplanRio através dos canais oficiais de suporte.
