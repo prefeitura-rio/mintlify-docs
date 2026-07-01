@@ -69,19 +69,26 @@
                   "data-lake/prefect/migracao-de-pipeline"
                 ]
               },
-              {
-                "group": "dbt",
-                "icon": "people-carry-box",
-                "pages": [
-                  "data-lake/dbt/instalacao-dbt",
-                  "data-lake/dbt/colaboracao-queries",
-                  "data-lake/dbt/estrutura-pastas",
-                  "data-lake/dbt/padroes-yaml",
-                  "data-lake/dbt/testes"
-                ]
-              }
-            ]
-          }
+           {
+             "group": "dbt",
+             "icon": "people-carry-box",
+             "pages": [
+               "data-lake/dbt/instalacao-dbt",
+               "data-lake/dbt/colaboracao-queries",
+               "data-lake/dbt/estrutura-pastas",
+               "data-lake/dbt/padroes-yaml",
+               "data-lake/dbt/testes"
+             ]
+           }
+             ]
+           },
+           {
+             "group": "Acesso aos Dados",
+             "icon": "lock-open",
+             "pages": [
+               "data-lake/acesso-aos-dados/bigquery"
+             ]
+           }
         ]
       },
       {

@@ -27,14 +27,43 @@ A documentação está organizada nas seguintes seções principais:
 
 ## Desenvolvimento Local
 
-Para visualizar e editar a documentação localmente, siga estes passos:
+### Opção 1: Usando Nix (Recomendado)
 
-1. Instale o [Mintlify CLI](https://www.npmjs.com/package/mintlify):
+Este projeto usa Nix para garantir um ambiente de desenvolvimento reproduzível com todas as dependências corretas.
+
+1. Instale Nix se ainda não tiver:
+```bash
+curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
+```
+
+2. Entre no ambiente de desenvolvimento:
+```bash
+nix develop
+```
+
+3. Inicie o servidor de desenvolvimento:
+```bash
+mintlify dev
+```
+
+Ou use o script de conveniência:
+```bash
+./start-dev.sh
+```
+
+O servidor iniciará em `http://localhost:3000`
+
+### Opção 2: Usando npm diretamente
+
+Se preferir não usar Nix, você pode instalar Mintlify globalmente:
+
+1. Certifique-se de ter Node.js 20+ instalado
+2. Instale o [Mintlify CLI](https://www.npmjs.com/package/mintlify):
 ```bash
 npm i -g mintlify
 ```
 
-2. Execute o servidor de desenvolvimento na raiz do projeto:
+3. Execute o servidor de desenvolvimento:
 ```bash
 mintlify dev
 ```
