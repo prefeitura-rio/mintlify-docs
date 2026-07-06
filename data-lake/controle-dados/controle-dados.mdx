@@ -1,0 +1,105 @@
+---
+title: Detenção do Controle dos Dados
+description: Descreve como a IplanRio garante a custódia e rastreabilidade dos dados recebidos das secretarias, desde a extração nos bancos de origem até a disponibilização no BigQuery (Data Lake).
+icon: diagram-project
+---
+
+## Visão Geral
+
+A **detenção do controle dos dados** define a responsabilidade da IplanRio pela custódia, integridade e rastreabilidade dos dados ao longo de todo o fluxo de ingestão, desde os dados gerados pelas secretarias e disponibilizados por banco de Dados e APIs até o BigQuery (Data Lake).
+
+Os dados são recebidos diretamente dos sistemas transacionais das secretarias (Oracle, SQL Server, MySQL, entre outros) e APIs, padronizados conforme o [Guia de Estilo](/data-lake/guia-de-estilo/convencoes-colunas), e disponibilizados na camada **Prata ou Core** ou  **Ouro ou Marts** do Data Lake, conforme o [Guia de Nomenclatura](/data-lake/guia-de-estilo/convencoes-datasets-e-tabelas), dependendo da necessidade final das secretárias.
+
+---
+
+### 1. Ingestão dos Dados
+
+A ingestão dos dados são feitas via Python e orquestrado pelo Prefect 3, que garante a execução confiável e rastreável das pipelines de extração e carga.
+Os dados que chegam ao Data Lake são provenientes de diferentes fontes, como bancos de dados relacionais (Oracle, SQL Server, MySQL) e APIs. A IplanRio é responsável por:
+- Estabelecer conexões seguras com os bancos de dados e APIs das secretarias.
+- Extrair os dados de forma eficiente, garantindo a integridade e consistência.
+
+
+<Note>
+As credenciais de acesso ao banco e APIs de origem são gerenciadas pela IplanRio em conjunto com a secretaria detentora dos dados, seguindo os requisitos de segurança da LGPD.
+</Note>
+
+### 2. Carga no Google Cloud Storage (GCS)
+
+Os dados extraídos são depositados em um bucket GCS dedicado, que atua como área de staging. Essa etapa garante:
+
+- **Imutabilidade do dado bruto**: o arquivo no GCS representa o estado exato do dado no momento da extração.
+- **Rastreabilidade**: cada arquivo carregado recebe metadados de data/hora de extração e identificador do processo.
+- **Resiliência**: em caso de falha na carga para o BigQuery, o dado permanece disponível no GCS para reprocessamento.
+
+### 3. Disponibilização no BigQuery (Camada Bronze)
+
+A partir do GCS, os dados são carregados na camada **Bronze** do BigQuery, com as seguintes características:
+
+- A estrutura da tabela corresponde à estrutura original do sistema de origem, sem alterações.
+- São adicionadas colunas de metadados obrigatórias, conforme o [Guia de Estilo de Colunas](/data-lake/guia-de-estilo/convencoes-colunas).
+- As tabelas recebem particionamento por data de carga para otimizar consultas e controle de custos.
+
+---
+
+## Padronizações Aplicadas na Ingestão
+
+Mesmo na camada Bronze, que preserva a estrutura de origem, aplicamos um conjunto mínimo de padronizações para garantir consistência no Data Lake:
+
+### Nomenclatura de Datasets e Tabelas
+
+Os datasets da camada Bronze seguem o padrão:
+
+- `brutos_<sigla_secretaria>_staging` — área de staging intermediária
+- `brutos_<sigla_secretaria>` — tabela consolidada da camada Bronze
+
+Exemplos:
+
+| Secretaria | Dataset Staging                  | Dataset Bronze          |
+|------------|----------------------------------|--------------------------|
+| SMS        | `brutos_sms_staging`             | `brutos_sms`            |
+| SME        | `brutos_sme_staging`             | `brutos_sme`            |
+| SMTR       | `brutos_smtr_staging`            | `brutos_smtr`           |
+
+Consulte o [Guia de Nomenclatura de Datasets](/data-lake/guia-de-estilo/convencoes-datasets-e-tabelas) para detalhes completos.
+
+### Colunas de Metadados
+
+Toda tabela ingerida recebe a seguinte coluna de metadados ao final do schema:
+
+| Coluna                    | Tipo        | Descrição                                              |
+|---------------------------|-------------|--------------------------------------------------------|
+| `data_particao`           | `DATETIME`  | Timestamp da carga no BigQuery                         |
+
+### Particionamento
+
+As tabelas Bronze são particionadas por `data_particao` (tipo `DATE`, formato `YYYY-MM-DD`) para permitir:
+
+- Consultas eficientes por período de ingestão.
+- Reprocessamento isolado de partições específicas.
+- Controle de custos no BigQuery.
+
+Consulte o [Guia de Particionamento](/data-lake/guia-de-estilo/particoes) para as regras completas.
+
+---
+
+## Responsabilidades
+
+| Responsável             | Atribuição                                                                 |
+|-------------------------|----------------------------------------------------------------------------|
+| **Secretaria de origem**| Disponibilizar acesso ao banco de dados e garantir qualidade dos dados na origem |
+| **IplanRio**            | Desenvolver, operar e monitorar as pipelines de ingestão                  |
+| **IplanRio**            | Garantir a rastreabilidade e integridade dos dados no GCS e no BigQuery   |
+
+<Warning>
+A camada Bronze representa os dados **como recebidos da secretaria**. Correções de qualidade, padronização semântica e enriquecimento são realizados nas camadas Prata e Ouro, por meio de modelos dbt.
+</Warning>
+
+---
+
+## Referências
+
+- [Extração e Carga de Dados](/data-lake/tipos-de-pipeline/extracao-e-carga-de-dados)
+- [Nomenclatura de Datasets e Tabelas](/data-lake/guia-de-estilo/convencoes-datasets-e-tabelas)
+- [Nomenclatura de Colunas](/data-lake/guia-de-estilo/convencoes-colunas)
+- [Particionamento de Tabelas](/data-lake/guia-de-estilo/particoes)

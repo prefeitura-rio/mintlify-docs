@@ -83,12 +83,19 @@
              ]
            },
            {
-             "group": "Acesso aos Dados",
-             "icon": "lock-open",
-             "pages": [
-               "data-lake/acesso-aos-dados/bigquery"
-             ]
-           }
+              "group": "Controle dos Dados",
+              "icon": "shield-check",
+              "pages": [
+                "data-lake/controle-dados/controle-dados"
+              ]
+            },
+           {
+              "group": "Acesso aos Dados",
+              "icon": "lock-open",
+              "pages": [
+                "data-lake/acesso-aos-dados/bigquery"
+              ]
+            }
         ]
       },
       {
