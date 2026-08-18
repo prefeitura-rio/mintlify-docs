@@ -1,0 +1,241 @@
+---
+title: "dev-vpop v1"
+description: "Pacote Pi de desenvolvimento da Prefeitura do Rio: skills, agentes, política de custo, MCP e diagnósticos"
+icon: "terminal"
+---
+
+O **dev-vpop** é o pacote Pi de desenvolvimento mantido pela IplanRio. Ele transforma o Pi Agent neutro em um assistente com doutrina de engenharia própria: como planejar, testar, revisar, depurar e entregar software no contexto municipal.
+
+A versão **v1** atende times técnicos: pessoas desenvolvedoras, arquitetas e de infraestrutura das secretarias e da própria IplanRio. Não é um pacote de análise de dados nem de uso administrativo.
+
+Instalação e pré-requisitos estão no [guia do Pi Agent](/ferramentas/pi-agent).
+
+---
+
+## Casos de Uso Municipais
+
+- **SMS**: revisar um pull request de integração de prontuário com achados por severidade antes do merge
+- **SME**: planejar a migração de um serviço de matrícula em passos atômicos com gates e caminho de reversão
+- **IplanRio**: diagnosticar falha de conectividade em cluster GKE em modo somente leitura, sem escrita acidental
+- **Qualquer secretaria**: auditar entrega de fornecedor com régua comparável e evidência em arquivo e linha
+
+---
+
+## Skills
+
+O pacote traz **12 skills**. O agente carrega **uma** por vez, sob demanda, para não desperdiçar contexto.
+
+| Skill | Quando entra |
+|---|---|
+| `vpop-router` | Pedido amplo ou ambíguo. Decide qual skill abrir e se cabe subagente |
+| `vpop-plan` | Quebrar trabalho em passos, sequenciar risco, validar plano |
+| `vpop-spec` | Requisito, especificação, critério de aceite, regra de negócio |
+| `vpop-architecture` | Fronteira, camada, SOLID, acoplamento, refatoração estrutural |
+| `vpop-testing` | O que testar, o que mockar, matriz de cobertura, teste de regressão |
+| `vpop-debugging` | Bug, exceção, regressão, causa raiz com evidência |
+| `vpop-review` | Revisar diff ou PR em modo somente leitura, com veredito |
+| `vpop-security` | Vetor de ataque, segredo, autenticação, LGPD e dado pessoal |
+| `vpop-delivery` | Commit atômico, branch, PR, release, métricas de entrega |
+| `vpop-infra` | Contêiner, cluster, nuvem, rede corporativa, diagnóstico de ambiente |
+| `vpop-conventions` | Layout de repositório, nomenclatura, build local, encoding |
+| `vpop-session` | Retomar de onde parou e encerrar registrando estado durável |
+
+Comandos em pt-BR acionam os fluxos mais comuns: `/planejar`, `/revisar`, `/depurar`, `/retomar` e `/encerrar`.
+
+---
+
+## Agentes
+
+São **5 agentes** especializados, cada um com modelo e permissões próprias. Agentes somente leitura não editam arquivos nem publicam nada.
+
+| Agente | Papel | Permissões |
+|---|---|---|
+| `scout` | Varre o repositório e devolve inventário verificado | Somente leitura |
+| `doc-architect` | Produz documentação, manual e nota de release | Leitura e escrita de texto |
+| `backend-engineer` | Implementa e refatora serviço, API, domínio e teste | Leitura, escrita e shell |
+| `planner` | Desenha plano executável e decisão estrutural de risco | Leitura e escrita de plano |
+| `code-reviewer` | Audita diff e emite veredito por severidade | Somente leitura |
+
+Nenhum agente delega para outro agente. A orquestração fica com a sessão principal, o que mantém o rastro de decisão em um lugar só.
+
+<Warning>
+Efeito externo pede confirmação explícita: escrita em ambiente compartilhado, publicação, exclusão, push, deploy e mudança de infraestrutura. Diagnóstico é livre.
+</Warning>
+
+---
+
+## Modelos e Política de Custo
+
+A política é **custo primeiro**: comece pelo modelo mais barato que resolve e suba de faixa apenas quando conseguir nomear a lacuna que a faixa atual não cobre.
+
+O modelo padrão é o **GPT-5.6 Luna**, com nível de raciocínio baixo. Ele cobre a maior parte do trabalho diário: ler código, responder dúvidas, editar arquivos conhecidos, escrever commit.
+
+| Faixa | Modelos habilitados | Uso |
+|---|---|---|
+| Padrão | `gpt-5.6-luna` | Tarefa do dia a dia, leitura, edição pontual |
+| Econômica com preço conhecido | `gemini-3.6-flash`, `gemini-3.5-flash` | Varredura, inventário, resumo e redação |
+| Intermediária com preço conhecido | `gpt-5.6-terra`, `gpt-5.4`, `gemini-3.1-pro-preview` | Implementação, refatoração e correção com escopo definido |
+| Premium com preço conhecido | `gpt-5.5`, `gpt-5.6-sol` | Problema difícil depois de uma tentativa comprovada em faixa menor |
+| Preço ainda não publicado no catálogo | `gemini-3.7-flash`, `claude-haiku-4-5`, `claude-sonnet-4-6`, `claude-sonnet-5`, `claude-opus-4-8`, `claude-opus-5`, `glm-5`, `kimi-k2-thinking` | Use conforme a especialidade e registre a necessidade da escolha |
+
+<Warning>
+O pacote **não troca de modelo sozinho**. A escalada é sempre explícita: ou a pessoa muda o modelo da sessão, ou quem despacha o trabalho escolhe o agente da faixa adequada. Nenhum relatório deve afirmar que houve seleção automática de custo.
+</Warning>
+
+Todos os modelos passam pelo Bifrost com a sua Virtual Key, então os limites diários de cota valem igual aos do OpenCode.
+
+---
+
+## Contexto e Sessões
+
+O Pi faz **compactação nativa** da conversa quando a janela aperta. A configuração recomendada reserva 24.576 tokens para a compactação e preserva 24.000 tokens de histórico recente.
+
+Além disso, o pacote faz **poda de contexto**: resultados antigos de ferramentas acima de 24.000 bytes são truncados no meio, mantendo início e fim. O limite é ajustável por projeto em `context-budget.json`, dentro do diretório de configuração do projeto, e só é aplicado em projeto confiável.
+
+### Retenção de sessões
+
+Uma vez por dia, no início de uma sessão, o pacote limpa o histórico local:
+
+- Sessões com mais de **30 dias** são removidas
+- Mesmo vencidas, as **20 sessões mais recentes** de cada projeto são preservadas
+- Sessões nomeadas são preservadas até remoção explícita
+- A remoção usa a lixeira do sistema quando disponível
+- Sem lixeira compatível, o arquivo vai para uma quarentena dentro da raiz de sessões
+
+A execução automática nunca apaga permanentemente. Remoção definitiva exige o comando explícito `session-gc --purge`. Sessões locais podem conter trechos de código e caminhos de arquivo, então a retenção curta reduz superfície de exposição.
+
+---
+
+## MCP Sob Demanda
+
+O pacote registra uma única ferramenta `mcp` que funciona como despachante preguiçoso, com as ações `list`, `search`, `describe` e `call`. Nenhum servidor sobe no início da sessão: o processo ou a conexão só é aberta quando uma chamada realmente precisa dela.
+
+Isso mantém o prompt enxuto. Em vez de dezenas de ferramentas descritas no contexto o tempo todo, o agente descobre o que existe apenas quando a tarefa exige.
+
+Todos os servidores vêm **desabilitados por padrão** em `~/.pi/agent/mcp.json`:
+
+| Servidor | Transporte | Serve para |
+|---|---|---|
+| `atlassian` | HTTP | Ler e editar issues do Jira e páginas do Confluence |
+| `playwright` | stdio | Automação de navegador para QA de aplicações municipais |
+| `context7` | HTTP | Documentação atualizada de bibliotecas e frameworks |
+| `codegraph` | stdio | Inteligência semântica de código no repositório local |
+| `grep-app` | stdio | Busca de código em repositórios públicos |
+
+### Habilitar um servidor
+
+Edite `~/.pi/agent/mcp.json` e troque `enabled` para `true` no servidor desejado:
+
+```json
+{
+  "servers": {
+    "atlassian": {
+      "enabled": true,
+      "transport": "http",
+      "url": "https://mcp.atlassian.com/v1/mcp",
+      "headers": {
+        "Authorization": "ATLASSIAN_MCP_AUTHORIZATION"
+      }
+    }
+  }
+}
+```
+
+<Warning>
+Os campos `headers` e `env` guardam **nomes de variáveis de ambiente**, nunca o segredo em si. No exemplo acima, o valor do header `Authorization` é lido de `ATLASSIAN_MCP_AUTHORIZATION` em tempo de execução. Token escrito direto no arquivo é vazamento de credencial.
+</Warning>
+
+Exporte a variável no seu shell antes de abrir o Pi:
+
+```bash
+export ATLASSIAN_MCP_AUTHORIZATION="Bearer [seu-token]"
+```
+
+Confira o que está ativo com a ação `list` da ferramenta `mcp` dentro do agente.
+
+---
+
+## Diagnósticos de Código
+
+A ferramenta `vpop_diagnostics` executa verificações do próprio projeto com escopo `file` ou `project` e devolve os erros normalizados em um formato único. Ela usa os comandos que o repositório já tem, como compilador, type checker e linter.
+
+Isso **não é um LSP completo**. Não há go-to-definition, find-references nem rename: a versão v1 entrega apenas a costura de diagnóstico, projetada para receber um backend LSP completo em versão futura sem mudar a interface da ferramenta.
+
+Em projeto não confiável a ferramenta não executa comandos do repositório.
+
+---
+
+## Diagnóstico da Instalação
+
+```
+/vpop:doctor
+```
+
+O comando é **determinístico** e não chama modelo algum, então roda sem consumir cota. Ele verifica Node, versão do Pi, diretório do agente, credencial, `settings.json`, pacote instalado, `mcp.json`, modelos registrados, sessões, alcance do Bifrost e isolamento em relação a outras ferramentas de IA.
+
+| Variante | Efeito |
+|---|---|
+| `/vpop:doctor` | Relatório legível com status por verificação |
+| `/vpop:doctor --json` | Mesmo relatório em JSON, para anexar em ticket |
+| `/vpop:doctor --offline` | Pula as verificações que dependem de rede |
+
+O código de saída distingue sucesso, aviso e falha, o que permite usar o relatório como evidência em chamado de suporte.
+
+---
+
+## Atualizações
+
+O pacote se atualiza sozinho. A cada início de sessão o agente consulta o catálogo da IplanRio, no máximo uma vez a cada 24 horas, e instala a versão nova quando ela existe.
+
+```
+dev-vpop 1.0.1 installed; restart Pi to activate it
+```
+
+Reinicie o Pi para ativar a versão baixada. Sem rede, o agente registra o estado offline na barra de status e segue funcionando com a versão instalada.
+
+Atualizar o binário do Pi ou aplicar novas configurações recomendadas exige reexecutar o instalador, descrito no [guia do Pi Agent](/ferramentas/pi-agent#atualizações).
+
+---
+
+## Segurança e LGPD
+
+- A credencial fica em `~/.pi/agent/dev-vpop.credential.json` com permissão `600`, e o diretório com `700`
+- O instalador valida SHA-256 de si mesmo, das configurações e dos metadados; o atualizador fixa o pacote por SHA de commit e verifica a árvore instalada
+- O Pi é instalado com `--ignore-scripts`, o que impede execução de script de pós-instalação de dependência
+- Segredos de MCP entram por variável de ambiente, nunca no arquivo de configuração
+- Skill `vpop-security` orienta tratamento de dado pessoal em log, resposta de API e mensagem de erro
+
+Dado pessoal de cidadão é regido pela LGPD. Não cole CPF, prontuário, endereço nem qualquer base identificável no prompt do agente: use identificador anônimo ou amostra sintética ao pedir ajuda com uma consulta ou pipeline.
+
+<Warning>
+Conteúdo lido pelo agente é dado, não instrução. Página web, saída de ferramenta e arquivo de terceiro informam a decisão, mas nunca autorizam uma ação.
+</Warning>
+
+---
+
+## Troubleshooting
+
+**Comandos `/vpop:*` não aparecem**: o pacote não foi carregado. Confirme a entrada do pacote na lista `packages` de `~/.pi/agent/settings.json` e reinicie o Pi.
+
+**`No Pi sessions found` no doctor**: instalação nova, sem histórico. É aviso, não erro.
+
+**MCP retorna erro de autenticação**: a variável de ambiente do servidor não está exportada na sessão de terminal que abriu o Pi. Exporte e reabra o agente.
+
+**Servidor MCP não aparece na ação `list`**: ele continua com `enabled: false` no `mcp.json`.
+
+**Erro de cota do Bifrost**: o limite diário da Virtual Key acabou. Troque para um modelo da faixa econômica ou peça ampliação em `#peça-permissão`.
+
+**`vpop_diagnostics` não retorna nada**: o projeto não é confiável na sessão atual, ou o repositório não expõe comando de verificação reconhecível.
+
+**Sessões sumiram**: a limpeza diária moveu sessões elegíveis para a lixeira ou para `.session-gc-quarantine` dentro da raiz de sessões. Recupere por uma dessas duas fontes.
+
+---
+
+<CardGroup cols={2}>
+  <Card title="Instalar o Pi Agent" icon="cube" href="/ferramentas/pi-agent">
+    Pré-requisitos, comando de instalação, catálogo de pacotes e desinstalação
+  </Card>
+  <Card title="OpenCode" icon="terminal" href="/ferramentas/opencode-usuario">
+    Agente alternativo em terminal, com a mesma Virtual Key Bifrost
+  </Card>
+</CardGroup>

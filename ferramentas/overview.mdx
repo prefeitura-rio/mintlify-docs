@@ -17,6 +17,12 @@ Não é necessário gerenciar credenciais de cloud ou chaves de API diretamente:
   <Card title="OpenCode Desktop" icon="display" href="/ferramentas/opencode-usuario#configuração-manual">
     Versão com interface gráfica do OpenCode. Mesma Virtual Key, mesma configuração Bifrost.
   </Card>
+  <Card title="Pi Agent" icon="cube" href="/ferramentas/pi-agent">
+    Agente de terminal com pacotes de capacidades. Instale o pacote adequado ao seu time sem reconfigurar o agente.
+  </Card>
+  <Card title="dev-vpop v1" icon="code" href="/ferramentas/dev-vpop">
+    Pacote Pi de desenvolvimento: 12 skills, 5 agentes, política de custo, MCP sob demanda e diagnósticos.
+  </Card>
 </CardGroup>
 
 ## Como Funciona o Acesso
@@ -24,8 +30,9 @@ Não é necessário gerenciar credenciais de cloud ou chaves de API diretamente:
 ```
 Você  →  solicita no Discord (#peça-permissão)
        →  recebe Virtual Key por email
-       →  roda o script de instalação
-       →  usa o OpenCode com múltiplos modelos via Bifrost
+       →  escolhe OpenCode ou um pacote Pi
+       →  roda o script de instalação correspondente
+       →  usa os modelos autorizados via Bifrost
 ```
 
 O **Bifrost** é o proxy centralizado de IA da IplanRio. Ele autentica as requisições, controla o acesso por Virtual Key e faz o roteamento para o modelo correto no Google Vertex AI — sem que você precise configurar nada de GCP.

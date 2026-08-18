@@ -180,6 +180,13 @@
             "pages": [
               "ferramentas/opencode-usuario"
             ]
+          },
+          {
+            "group": "Pi Agent",
+            "pages": [
+              "ferramentas/pi-agent",
+              "ferramentas/dev-vpop"
+            ]
           }
         ]
       },

@@ -1,0 +1,239 @@
+---
+title: "Pi Agent - Instalação e Pacotes"
+description: "Como instalar o Pi Agent da IplanRio e adicionar pacotes de capacidades como o dev-vpop"
+icon: "cube"
+---
+
+O **Pi Agent** é o agente de codificação em terminal distribuído pela IplanRio para as secretarias municipais. O binário do Pi é neutro: quem define skills, agentes, comandos e integrações é o **pacote** instalado junto com ele.
+
+Esse desenho existe para que cada público municipal receba só o que precisa. Uma equipe de desenvolvimento da SMS instala o pacote de engenharia; uma equipe de dados da SME poderá instalar um pacote analítico no futuro, sem reinstalar nem reconfigurar o agente.
+
+---
+
+## Por Que Pacotes
+
+Um pacote Pi entrega, em um único artefato versionado:
+
+- **Skills**: doutrina de trabalho carregada sob demanda pelo agente
+- **Agentes**: perfis especializados com modelo e permissões próprias
+- **Comandos**: atalhos de prompt em pt-BR, como `/planejar` e `/revisar`
+- **Extensões**: ferramentas adicionais registradas no agente em tempo de execução
+- **Configuração recomendada**: provedores, modelos habilitados e padrões de sessão
+
+O Pi sozinho não traz MCP, diagnósticos de código nem subagentes. Essas capacidades chegam pelas extensões do pacote, e por isso a escolha do pacote define a experiência.
+
+<Info>
+A IplanRio mantém o catálogo de pacotes, o instalador e as configurações recomendadas. Cada instalação fica isolada em `~/.pi/agent` e não interfere em outras ferramentas de IA já instaladas na máquina.
+</Info>
+
+---
+
+## Solicitar Acesso
+
+O acesso aos modelos usa a mesma **Virtual Key** do Bifrost, o proxy centralizado de IA da IplanRio.
+
+1. Acesse o canal **`#peça-permissão`** no Discord da IplanRio
+2. Envie nome completo, email institucional, área ou secretaria e justificativa de uso
+3. Aguarde a aprovação da equipe de IA
+4. Receba a Virtual Key por email
+
+Quem já usa o [OpenCode](/ferramentas/opencode-usuario) deve pedir à equipe de IA que confirme se a Virtual Key também autoriza os modelos do `dev-vpop`. Não presuma que uma chave antiga possui o catálogo novo.
+
+<Warning>
+A Virtual Key é pessoal e intransferível. Nunca coloque a chave em repositório, ticket, print ou canal público.
+</Warning>
+
+---
+
+## Pré-requisitos
+
+| Requisito | Versão | Observação |
+|---|---|---|
+| Node.js | >= 22.19 | Obrigatório. O instalador aborta em versões anteriores e não remove a sua versão atual |
+| npm | acompanha o Node | Usado para instalar o Pi globalmente |
+| curl | qualquer | Necessário em Linux, macOS e WSL |
+| Virtual Key Bifrost | ativa | Solicitada no Discord |
+
+Confirme o Node antes de começar:
+
+```bash
+node --version
+```
+
+```
+v22.19.0
+```
+
+No Windows, instale o Node pelo site oficial. No WSL, instale o Node **dentro** da distribuição Linux, não no Windows host.
+
+---
+
+## Instalação
+
+O instalador recebe o **nome do pacote** como primeiro argumento. O ecossistema de Pi Agents da IplanRio foi desenhado para hospedar múltiplos pacotes temáticos na mesma infraestrutura centralizada.
+
+<Tabs>
+  <Tab title="Linux / macOS / WSL">
+    ```bash
+    curl -fsSL https://storage.googleapis.com/iplanrio-pi/install.sh \
+      | bash -s -- dev-vpop --virtual-key [sua-virtual-key]
+    ```
+  </Tab>
+  <Tab title="Windows (PowerShell)">
+    ```powershell
+    & ([scriptblock]::Create((irm 'https://storage.googleapis.com/iplanrio-pi/install.ps1'))) `
+      -Package 'dev-vpop' -VirtualKey '[sua-virtual-key]'
+    ```
+  </Tab>
+</Tabs>
+
+Saída esperada ao final:
+
+```
+[dev-vpop] Catalogo e metadados verificados para dev-vpop.
+[dev-vpop] Instalando Pi 0.84.2 sem executar scripts npm...
+[dev-vpop] Instalando pacote Pi dev-vpop...
+[dev-vpop] Executando diagnostico deterministico...
+[dev-vpop] Doctor OK: Pi 0.84.2, configuracao isolada e pacote dev-vpop prontos.
+```
+
+Omita `--virtual-key` para reaproveitar a credencial já gravada. Sem credencial existente, o instalador pede a chave em modo oculto no terminal.
+
+<Info>
+A disponibilidade pública do instalador depende do provisionamento de acesso pela equipe de IA. Este é o comando suportado: solicite acesso no Discord antes de executá-lo.
+</Info>
+
+### O que o instalador faz
+
+1. Baixa o catálogo global da IplanRio (`https://storage.googleapis.com/iplanrio-pi/manifests/catalog.json`), valida o schema e resolve o pacote solicitado
+2. Confere o **SHA-256** do próprio instalador, das configurações e dos metadados do pacote
+3. Instala o Pi na versão fixada com `--ignore-scripts`
+4. Grava credencial, `settings.json` e `mcp.json` em `~/.pi/agent` com permissão restrita
+5. Instala o pacote e roda um diagnóstico determinístico
+
+Um `settings.json` já existente é preservado: o instalador faz merge das chaves gerenciadas e cria backup com timestamp antes de sobrescrever.
+
+### Simular antes de aplicar
+
+```bash
+curl -fsSL https://storage.googleapis.com/iplanrio-pi/install.sh \
+  | bash -s -- dev-vpop --dry-run
+```
+
+```
+[dev-vpop] Catalogo e metadados verificados para dev-vpop.
+[dev-vpop] Simulacao: instalaria Pi 0.84.2, configuraria /home/usuario/.pi/agent e instalaria git:https://github.com/prefeitura-rio/setup-ia-pref@[sha-do-release].
+```
+
+---
+
+## Biblioteca de Pacotes da IplanRio
+
+O catálogo central de pacotes da Prefeitura do Rio organiza as capacidades por perfil de time e stack técnica. Novos pacotes são publicados com versionamento semântico imutável e distribuídos automaticamente pelo mesmo ecossistema:
+
+| Pacote | Público / Domínio | O que inclui | Guia |
+|---|---|---|---|
+| `dev-vpop` | **Engenharia e Desenvolvimento Geral** (APIs Go, Node, Python, C#, Web) | 12 skills de engenharia, 5 agentes de delegação (scout, planner, backend, reviewer, doc), MCPs sob demanda, diagnósticos | [dev-vpop v1](/ferramentas/dev-vpop) |
+| `data-analytics` *(em breve)* | **Engenharia e Ciência de Dados** (dbt, BigQuery, Prefect, DuckDB) | Skills de modelagem dimensional, SQL tuning municipal, catalogação de dados | Em desenvolvimento |
+| `infra-ops` *(em breve)* | **Operações e Infraestrutura** (Terraform, Kubernetes, GCP, Tailscale) | Automações de diagnóstico de clusters, regras de governança de IAM e redes | Em desenvolvimento |
+
+Para instalar qualquer pacote do catálogo, basta passar o nome dele no comando de instalação:
+
+```bash
+# Exemplo para instalar outro pacote do catálogo no futuro:
+curl -fsSL https://storage.googleapis.com/iplanrio-pi/install.sh | bash -s -- nome-do-pacote
+```
+
+---
+
+## Verificação
+
+Abra o agente e rode o diagnóstico:
+
+```bash
+pi
+```
+
+```
+/vpop:doctor
+```
+
+O comando é determinístico e não consome cota de modelo. Ele confere Node, versão do Pi, diretório do agente, credencial, `settings.json`, pacote instalado, `mcp.json`, modelos registrados, sessões e isolamento em relação a outras ferramentas.
+
+Para checar a versão do Pi fora do agente:
+
+```bash
+pi --version
+```
+
+```
+0.84.2
+```
+
+---
+
+## Atualizações
+
+Pacotes gerenciados pela IplanRio se atualizam sozinhos. A cada início de sessão o agente consulta o catálogo, no máximo uma vez a cada 24 horas, e instala a versão nova quando existe.
+
+```
+dev-vpop 1.0.1 installed; restart Pi to activate it
+```
+
+Reinicie o Pi para ativar a versão baixada. Para forçar uma verificação imediata ou ver o estado atual, use o comando de atualização do pacote dentro do agente.
+
+Atualizar o **Pi** em si, ou aplicar novas configurações recomendadas, exige reexecutar o instalador. A credencial existente é preservada.
+
+---
+
+## Desinstalação
+
+<Steps>
+  <Step title="Remover o pacote da configuração">
+    Liste a fonte instalada e remova o pacote pelo Pi:
+    ```bash
+    pi list
+    pi remove git:https://github.com/prefeitura-rio/setup-ia-pref@[sha-exibido]
+    ```
+  </Step>
+  <Step title="Remover o Pi">
+    ```bash
+    npm uninstall -g @earendil-works/pi-coding-agent
+    ```
+  </Step>
+  <Step title="Remover credencial e configuração">
+    ```bash
+    rm -rf ~/.pi/agent
+    ```
+    Isso apaga credencial, configurações e o registro do pacote gerenciado. Faça backup antes se quiser preservar ajustes locais.
+  </Step>
+</Steps>
+
+No Windows, o diretório equivalente é `%USERPROFILE%\.pi\agent`.
+
+---
+
+## Troubleshooting
+
+**`Node >=22.19 e obrigatorio`**: instale o Node 22 ou superior. No WSL, instale dentro da distribuição Linux com `nvm install 22`.
+
+**`Pi foi instalado, mas o comando pi nao esta disponivel no PATH atual`**: o diretório global do npm não está no PATH. Rode `npm prefix -g`, adicione o subdiretório `bin` ao PATH e abra um novo terminal.
+
+**`Pacote 'x' nao encontrado no canal 'stable'`**: o nome do pacote não existe no catálogo. Confira a tabela do catálogo acima.
+
+**`Checksum SHA-256 invalido`**: o download foi corrompido ou interceptado. Repita a instalação em rede confiável e, se persistir, avise no Discord da IplanRio sem executar o arquivo.
+
+**`Virtual Key obrigatoria`**: passe `--virtual-key` ou rode o instalador sem `--yes` para digitar a chave de forma oculta.
+
+**`Doctor: configuracao Pi incompleta ou invalida`**: rode `/vpop:doctor --json` dentro do agente para ver qual verificação falhou e leve a saída ao canal de suporte.
+
+---
+
+<CardGroup cols={2}>
+  <Card title="dev-vpop v1" icon="terminal" href="/ferramentas/dev-vpop">
+    Skills, agentes, modelos, MCP e política de custo do pacote de desenvolvimento
+  </Card>
+  <Card title="OpenCode" icon="terminal" href="/ferramentas/opencode-usuario">
+    Alternativa em terminal já em uso nas secretarias, com a mesma Virtual Key
+  </Card>
+</CardGroup>
