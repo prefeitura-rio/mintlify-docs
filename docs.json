@@ -90,7 +90,7 @@
               "data-lake/acesso-aos-dados/bigquery",
               "data-lake/acesso-aos-dados/solicitacao-acesso-interno",
               "data-lake/acesso-aos-dados/solicitacao-acesso-externo",
-              "data-lake/acesso-aos-dados/solicitacao-acesso-api-bcadastro"
+              "data-lake/acesso-aos-dados/solicitacao-acesso-api"
             ]
           }
         ]
