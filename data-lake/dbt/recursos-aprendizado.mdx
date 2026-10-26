@@ -5,7 +5,11 @@ description: Guia com tutoriais essenciais e cursos para dominar as melhores pr�
 
 O dbt oferece cursos estruturados e oficiais para desenvolver habilidades desde o básico até tópicos avançados. Abaixo estão os recursos recomendados pelo time, listados em ordem de aprendizado.
 
-## 1. dbt Fundamentals
+## Bloco Básico Obrigatório
+
+Todos os desenvolvedores dbt devem completar os seguintes cursos nesta ordem:
+
+### 1. dbt Fundamentals
 Introdução completa ao dbt, cobrindo conceitos básicos, estrutura de projetos e fluxo de trabalho essencial.
 
 **Acesso**: [dbt Fundamentals](https://learn.getdbt.com/courses/dbt-fundamentals-vs-code)
@@ -18,85 +22,19 @@ Introdução completa ao dbt, cobrindo conceitos básicos, estrutura de projetos
 
 ---
 
-## 2. Materialization Fundamentals
+### 2. Materialization Fundamentals
 Aprofunde-se nas diferentes formas de materializar modelos dbt e escolha a mais adequada para cada caso de uso.
 
 **Acesso**: [Materialization Fundamentals](https://learn.getdbt.com/courses/materializations-fundamentals)
 
 **Tópicos cobertos**:
 - Tables e views
-- Incremental models (conceitos básicos)
 - Ephemeral models
-- Quando usar cada type de materialização
+- Quando usar cada tipo de materialização
 
 ---
 
-## 3. Snapshots
-Capture mudanças em seus dados ao longo do tempo com snapshots, essencial para rastreabilidade de alterações em dimensões.
-
-**Acesso**: [Snapshots](https://learn.getdbt.com/courses/snapshots-vs-code)
-
-**Tópicos cobertos**:
-- Como snapshots funcionam
-- Configuração e execução
-- Diferentes estratégias de snapshot
-- Casos de uso em data lakes
-
----
-
-## 4. Exposures
-Documente e comunique o impacto de seus modelos dbt em relatórios, dashboards e outras aplicações downstream.
-
-**Acesso**: [Exposures](https://learn.getdbt.com/courses/exposures)
-
-**Tópicos cobertos**:
-- O que são exposures
-- Documentar dependências
-- Integração com ferramentas de BI
-- Rastreamento de lineage
-
----
-
-## 5. Jinja, Macros and Packages
-Aumente a flexibilidade e reutilização de código com Jinja templating, macros customizadas e pacotes dbt.
-
-**Acesso**: [Jinja, Macros and Packages](https://learn.getdbt.com/courses/jinja-macros-and-packages-vs-code)
-
-**Tópicos cobertos**:
-- Sintaxe Jinja básica e avançada
-- Criação de macros reutilizáveis
-- Instalação e uso de packages dbt
-- Comunidade e open-source
-
----
-
-## 6. Unit Testing
-Implemente testes unitários para garantir qualidade do código SQL e lógica de transformação.
-
-**Acesso**: [Unit Testing](https://learn.getdbt.com/courses/unit-testing-vs-code)
-
-**Tópicos cobertos**:
-- Testes unitários vs testes de integração
-- Estrutura de testes unitários
-- Fixtures e mock data
-- Boas práticas de testing
-
----
-
-## 7. Incremental Models
-Otimize performance implementando modelos que processam apenas dados novos ou modificados.
-
-**Acesso**: [Incremental Models](https://learn.getdbt.com/courses/incremental-models)
-
-**Tópicos cobertos**:
-- Conceito de incremental models
-- Estratégias de incrementação
-- Configuração e troubleshooting
-- Performance e otimização
-
----
-
-## 8. Refactoring SQL for Modularity
+### 3. Refactoring SQL for Modularity
 Refatore SQL complexo em modelos modulares e reutilizáveis para melhor manutenibilidade.
 
 **Acesso**: [Refactoring SQL for Modularity](https://learn.getdbt.com/courses/refactoring-sql-for-modularity-vs-code)
@@ -109,7 +47,76 @@ Refatore SQL complexo em modelos modulares e reutilizáveis para melhor manuteni
 
 ---
 
-## 9. Advanced Testing
+### 4. Unit Testing
+Implemente testes unitários para garantir qualidade do código SQL e lógica de transformação. Este curso não é coberto no curso de Fundamentos.
+
+**Acesso**: [Unit Testing](https://learn.getdbt.com/courses/unit-testing-vs-code)
+
+**Tópicos cobertos**:
+- Testes unitários vs testes de integração
+- Estrutura de testes unitários
+- Fixtures e mock data
+- Boas práticas de testing
+
+---
+
+## Tópicos Avançados
+
+Após completar o bloco básico, explore os seguintes cursos de acordo com suas necessidades:
+
+### Snapshots
+Capture mudanças em seus dados ao longo do tempo com snapshots, essencial para rastreabilidade de alterações em dimensões.
+
+**Acesso**: [Snapshots](https://learn.getdbt.com/courses/snapshots-vs-code)
+
+**Tópicos cobertos**:
+- Como snapshots funcionam
+- Configuração e execução
+- Diferentes estratégias de snapshot
+- Casos de uso em data lakes
+
+---
+
+### Jinja, Macros and Packages
+Aumente a flexibilidade e reutilização de código com Jinja templating, macros customizadas e pacotes dbt.
+
+**Acesso**: [Jinja, Macros and Packages](https://learn.getdbt.com/courses/jinja-macros-and-packages-vs-code)
+
+**Tópicos cobertos**:
+- Sintaxe Jinja básica e avançada
+- Criação de macros reutilizáveis
+- Instalação e uso de packages dbt
+- Comunidade e open-source
+
+---
+
+### Incremental Models
+Otimize performance implementando modelos que processam apenas dados novos ou modificados.
+
+**Acesso**: [Incremental Models](https://learn.getdbt.com/courses/incremental-models)
+
+**Tópicos cobertos**:
+- Conceito de incremental models
+- Estratégias de incrementação
+- Configuração e troubleshooting
+- Performance e otimização
+
+---
+
+### Exposures
+Documente e comunique o impacto de seus modelos dbt em relatórios, dashboards e outras aplicações downstream.
+
+**Acesso**: [Exposures](https://learn.getdbt.com/courses/exposures)
+
+**Tópicos cobertos**:
+- O que são exposures
+- Documentar dependências
+- Integração com ferramentas de BI
+- Rastreamento de lineage
+
+---
+
+### Advanced Testing
 Domine técnicas avançadas de testes para garantir qualidade e confiabilidade dos dados em produção.
 
 **Acesso**: [Advanced Testing](https://learn.getdbt.com/courses/advanced-testing)
